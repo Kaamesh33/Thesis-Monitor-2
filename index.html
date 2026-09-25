@@ -200,7 +200,7 @@ const RULES = `Rules you must follow:
 - Never give numeric scores or probabilities.
 - Pillar statuses may only be: supported, monitor, challenged, insufficient.
 - Keep what the company said separate from your own interpretation.
-- Only use facts from (a) the material the user pasted, (b) web search results if you have the web search tool, or (c) your own background knowledge. Label every piece of evidence with its source (publication or document name) and date. For background knowledge, use source "Claude background knowledge" with the approximate period; it may be outdated. Prefer the most recent reliable sources: company filings, results releases, earnings calls, exchange announcements, and established financial news.
+- Only use facts from (a) the material the user pasted, (b) web search results if you have the web search tool, or (c) your own background knowledge. Label every piece of evidence with its source (publication or document name) and date. For background knowledge, use source "AI background knowledge" with the approximate period; it may be outdated. Prefer the most recent reliable sources: company filings, results releases, earnings calls, exchange announcements, and established financial news.
 - Never invent figures, dates or quotes. If you do not have reliable information, say so and use status "insufficient".
 - Plain English. No hype.`;
 
@@ -253,28 +253,32 @@ function thesisStatus(s){
   return {k, text: parts.join(", "), c};
 }
 
-/* ---------- Claude ---------- */
-/* Direct Anthropic API with the user's own key */
-const KEY_LS="tm_api_key", CFG_LS="tm_cfg";
-function apiKey(){ try{ return localStorage.getItem(KEY_LS)||""; }catch(e){ return ""; } }
-function cfg(){ try{ return Object.assign({model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", web:true}, JSON.parse(localStorage.getItem(CFG_LS)||"{}")); }catch(e){ return {model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", web:true}; } }
+/* ---------- AI providers: Gemini (free tier) or Claude (paid) ---------- */
+const KEY_LS="tm_api_key", GKEY_LS="tm_gemini_key", CFG_LS="tm_cfg";
+const CFG_DEFAULT = {provider:"gemini", model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", gmodel:"gemini-2.5-flash", gquick:"gemini-2.5-flash-lite", web:true};
+function cfg(){ try{ return Object.assign({}, CFG_DEFAULT, JSON.parse(localStorage.getItem(CFG_LS)||"{}")); }catch(e){ return Object.assign({}, CFG_DEFAULT); } }
 function setCfg(c){ try{ localStorage.setItem(CFG_LS, JSON.stringify(c)); }catch(e){} }
+function keyFor(p){ try{ return localStorage.getItem(p==="claude"?KEY_LS:GKEY_LS)||""; }catch(e){ return ""; } }
+function apiKey(){ return keyFor(cfg().provider); }
 function errText(e){
   const c = e && e.code;
-  if(c==="no_key") return "Add your Claude API key in Settings (gear icon, top right) to use the AI features.";
+  if(c==="no_key") return "Add your free Gemini API key in Settings (gear icon, top right) to use the AI features.";
   if(c==="auth") return "Your API key was rejected. Check it in Settings.";
-  if(c==="credit") return "Your Anthropic account is out of credit. Add credit at console.anthropic.com.";
+  if(c==="credit") return "Your AI account is out of credit or over its limit.";
+  if(c==="quota") return "You've reached the free daily limit for this AI model. Try again later, or pick a lighter model (Flash-Lite) in Settings.";
+  if(c==="model") return "That AI model isn't available. Pick a different model in Settings.";
+  if(c==="blocked") return "The AI declined to answer this one. Try rewording it.";
   if(c==="rate_limited") return "Too many requests at once. Wait a minute and try again.";
-  if(c==="overloaded") return "Claude is busy right now. Try again in a minute.";
-  if(c==="invalid_json") return "Claude's answer came back in the wrong shape. Please try again.";
+  if(c==="overloaded") return "The AI is busy right now. Try again in a minute.";
+  if(c==="invalid_json") return "The AI's answer came back in the wrong shape. Please try again.";
   if(c==="network") return "No internet connection, or the request was blocked. Check your connection and try again.";
   if(c==="cancelled") return "Stopped.";
   return "Something went wrong" + (e&&e.message?": "+e.message:"") + ". Please try again.";
 }
 const SYSTEM = "You are Thesis Monitor, a careful equity research assistant. You help an investor track whether their own investment thesis still holds. You never give buy, sell or hold recommendations, never give price targets, and never give numeric scores.";
-async function callClaude(messages, opt){
+async function claudeCall(messages, opt){
   opt = opt||{};
-  const key = apiKey(); if(!key) throw {code:"no_key"};
+  const key = keyFor("claude"); if(!key) throw {code:"no_key"};
   const c = cfg();
   const body = {model: opt.tier==="quick"? c.quick : c.model, max_tokens: opt.max||3000, system: SYSTEM, messages};
   if(c.web && opt.web) body.tools = [{type:"web_search_20250305", name:"web_search", max_uses: opt.webUses||5}];
@@ -289,7 +293,7 @@ async function callClaude(messages, opt){
     if(res.status===429) throw {code:"rate_limited", message:msg};
     if(res.status===529||res.status===503) throw {code:"overloaded", message:msg};
     if(/credit|balance|billing/i.test(msg)) throw {code:"credit", message:msg};
-    if(res.status===400 && body.tools && /web_search|tool/i.test(msg)){ const c2=cfg(); c2.web=false; setCfg(c2); return callClaude(messages, Object.assign({}, opt, {web:false})); }
+    if(res.status===400 && body.tools && /web_search|tool/i.test(msg)){ const c2=cfg(); c2.web=false; setCfg(c2); return claudeCall(messages, Object.assign({}, opt, {web:false})); }
     throw {code:"http", message: msg || ("HTTP "+res.status)};
   }
   if(!opt.onText){
@@ -315,6 +319,58 @@ async function callClaude(messages, opt){
   }
   return text;
 }
+async function geminiCall(messages, opt){
+  opt = opt||{};
+  const key = keyFor("gemini"); if(!key) throw {code:"no_key"};
+  const c = cfg();
+  const model = opt.tier==="quick" ? c.gquick : c.gmodel;
+  const body = {
+    systemInstruction: {parts:[{text: SYSTEM}]},
+    contents: messages.map(m=>({role: m.role==="assistant"?"model":"user", parts:[{text: m.content}]})),
+    generationConfig: {maxOutputTokens: Math.max(8192, (opt.max||3000)*3), temperature: 0.4}
+  };
+  if(c.web && opt.web) body.tools = [{google_search:{}}];
+  const base = "https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model);
+  const url = opt.onText ? base+":streamGenerateContent?alt=sse" : base+":generateContent";
+  let res;
+  try{ res = await fetch(url, {method:"POST", headers:{"content-type":"application/json","x-goog-api-key":key}, body: JSON.stringify(body), signal: opt.signal}); }
+  catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {code:"network"}; }
+  if(!res.ok){
+    let msg="", st=""; try{ const j=await res.json(); msg = j.error&&j.error.message||""; st = j.error&&j.error.status||""; }catch(e){}
+    if(res.status===400 && /API key|API_KEY/i.test(msg)) throw {code:"auth", message:msg};
+    if(res.status===401||res.status===403) throw {code:"auth", message:msg};
+    if(res.status===404) throw {code:"model", message:msg};
+    if(res.status===429) throw {code: /quota|exhausted|per day|limit/i.test(msg)?"quota":"rate_limited", message:msg};
+    if(res.status===503||res.status===500) throw {code:"overloaded", message:msg};
+    if(res.status===400 && body.tools && /search|tool|grounding/i.test(msg)){ const c2=cfg(); c2.web=false; setCfg(c2); return geminiCall(messages, Object.assign({}, opt, {web:false})); }
+    throw {code:"http", message: msg || ("HTTP "+res.status)};
+  }
+  const partsText = j => { const cd = j && j.candidates && j.candidates[0]; if(!cd) { if(j && j.promptFeedback && j.promptFeedback.blockReason) throw {code:"blocked"}; return ""; } return ((cd.content&&cd.content.parts)||[]).filter(p=>p.text && !p.thought).map(p=>p.text).join(""); };
+  if(!opt.onText){
+    const j = await res.json();
+    const t = partsText(j);
+    if(!t){ const fr = j.candidates&&j.candidates[0]&&j.candidates[0].finishReason; if(fr==="SAFETY"||fr==="PROHIBITED_CONTENT") throw {code:"blocked"}; throw {code:"http", message:"empty answer"+(fr?" ("+fr+")":"")}; }
+    return t;
+  }
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf="", text="";
+  opt.onText({text:"Thinking…"});
+  while(true){
+    const {done, value} = await reader.read(); if(done) break;
+    buf += dec.decode(value, {stream:true});
+    let i;
+    while((i = buf.indexOf("\n"))>=0){
+      const line = buf.slice(0,i).trim(); buf = buf.slice(i+1);
+      if(!line.startsWith("data:")) continue;
+      let j; try{ j = JSON.parse(line.slice(5)); }catch(e){ continue; }
+      const d = partsText(j); if(d){ text += d; opt.onText({text}); }
+    }
+  }
+  if(!text) throw {code:"http", message:"empty answer"};
+  return text;
+}
+async function callClaude(messages, opt){ return cfg().provider==="claude" ? claudeCall(messages, opt) : geminiCall(messages, opt); }
+
 function parseJSON(t){
   const s = t.replace(/```json|```/g,"");
   const a = s.indexOf("{"), b = s.lastIndexOf("}");
@@ -378,7 +434,7 @@ function vHome(app){
       <div class="card" style="margin-top:20px">
         <h3>Start with a stock you own</h3>
         <p class="small muted">Takes about two minutes. You'll need the ticker, your quantity and average price, and a few sentences on why you bought it.</p>
-        ${apiKey()?"":`<p class="small">First, <a href="#/settings">add your Claude API key</a> so the app can analyse your thesis.</p>`}
+        ${apiKey()?"":`<p class="small">First, <a href="#/settings">add your free AI key</a> so the app can analyse your thesis.</p>`}
         <a class="btn primary block" href="#/add">Add a stock</a>
       </div>
       <a class="card hold" href="#/research" style="display:block"><h3>Search any stock</h3><p class="small muted" style="margin:0">Live price, value zone, trend, analyst targets and news.</p></a>
@@ -417,7 +473,7 @@ function vHome(app){
   const unread = state.alerts.filter(a=>!a.read);
 
   app.innerHTML = `
-    ${apiKey()?"":`<a class="card tight hold note" href="#/settings" style="display:block"><strong>Connect Claude to turn on analysis.</strong><br><span class="small">Add your API key in Settings.</span></a>`}
+    ${apiKey()?"":`<a class="card tight hold note" href="#/settings" style="display:block"><strong>Connect the AI to turn on analysis.</strong><br><span class="small">Add your API key in Settings.</span></a>`}
     <p class="brief">${esc(brief.trim())}</p>
     ${unread.length?`<a class="card tight hold unread" href="#/alerts"><div class="row between"><span><strong>${unread.length} new alert${unread.length>1?"s":""}</strong><br><span class="small muted">${esc(unread[unread.length-1].title)}</span></span><span aria-hidden="true">›</span></div></a>`:""}
     <div class="card tight">
@@ -472,7 +528,7 @@ function vStocks(app){
 function vAdd(app){
   app.innerHTML = `<a class="back" href="#/stocks">‹ My stocks</a>
   <h1>Add a stock</h1>
-  <p class="muted small">Your own words matter most here. Claude will organise them, never replace them.</p>
+  <p class="muted small">Your own words matter most here. The AI will organise them, never replace them.</p>
   <form id="f" novalidate>
     <div class="two">
       <div><label class="f" for="tk">Ticker</label><input class="i" id="tk" required autocapitalize="characters" placeholder="e.g. INFY" maxlength="20"></div>
@@ -486,7 +542,7 @@ function vAdd(app){
       <div><label class="f" for="pr">Current price</label><input class="i" id="pr" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional"></div>
       <div><label class="f" for="eps">Trailing EPS</label><input class="i" id="eps" type="number" inputmode="decimal" step="any" placeholder="Optional"></div>
     </div>
-    <p class="hint">EPS (earnings per share, last 12 months) lets Claude show price scenarios. Without it, scenarios are skipped rather than guessed.</p>
+    <p class="hint">EPS (earnings per share, last 12 months) lets the app show price scenarios. Without it, scenarios are skipped rather than guessed.</p>
     <div class="two">
       <div><label class="f" for="pd">Purchase date</label><input class="i" id="pd" type="date"></div>
       <div><label class="f" for="hz">Horizon</label><select class="i" id="hz"><option>Under 1 year</option><option>1–3 years</option><option selected>3–5 years</option><option>5+ years</option></select></div>
@@ -663,7 +719,7 @@ function whatChangedForm(s){
   $("#wcpanel").innerHTML = `<div class="card" style="margin-top:12px">
     <label class="f" for="wcin" style="margin-top:0">Paste anything new (optional)</label>
     <textarea class="i" id="wcin" placeholder="Quarterly results, earnings call notes, management guidance, news articles…"></textarea>
-    <p class="hint">${cfg().web?"Claude will also search the web for the latest results, filings and news.":"Web search is off, so without pasted material Claude uses its background knowledge, which may be out of date."}</p>
+    <p class="hint">${cfg().web?"The AI will also search the web for the latest results, filings and news.":"Web search is off, so without pasted material the AI uses its background knowledge, which may be out of date."}</p>
     <div class="row" style="margin-top:10px"><button class="btn ghost" id="wcx">Cancel</button><button class="btn primary grow" id="wcgo">Analyse${r?" since "+dfmt(r.date):""}</button></div>
     <div id="wcmsg"></div></div>`;
   $("#wcx").onclick = ()=>{ $("#wcpanel").innerHTML=""; };
@@ -740,7 +796,7 @@ function outlookHTML(s, o){
     ${sc&&sc.ok?`<p class="tiny muted" style="margin-top:8px">Range = trailing EPS ${sc.eps} × (1 + growth)<sup>${sc.years}</sup> × P/E. These are arithmetic on stated assumptions, not predictions.</p>`:""}
     ${o.drivers&&o.drivers.length?`<div class="hr"></div><div class="small muted">What it's based on</div><ul class="watch">${o.drivers.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}
     ${o.monitor&&o.monitor.length?`<div class="small muted" style="margin-top:8px">What to monitor</div><ul class="watch">${o.monitor.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}
-    <p class="tiny muted" style="margin:10px 0 0">Generated ${dfmt(o.date)}${o.web?" with web search":o.pasted?"":" from Claude's background knowledge, which may be out of date"}.</p>
+    <p class="tiny muted" style="margin:10px 0 0">Generated ${dfmt(o.date)}${o.web?" with web search":o.pasted?"":" from the AI's background knowledge, which may be out of date"}.</p>
   </div>`;
 }
 
@@ -794,7 +850,7 @@ function computeScenarios(s, o, years){
   for(const k of ["bear","base","bull"]){
     const c = o[k]||{};
     const g=Number(c.eps_growth_pct), lo=Number(c.pe_low), hi=Number(c.pe_high);
-    if(c.eps_growth_pct==null||c.pe_low==null||c.pe_high==null||[g,lo,hi].some(isNaN)||lo<=0||hi<lo) return {ok:false, msg:"Insufficient data to produce a reliable scenario. Claude could not justify valuation assumptions from the available evidence."};
+    if(c.eps_growth_pct==null||c.pe_low==null||c.pe_high==null||[g,lo,hi].some(isNaN)||lo<=0||hi<lo) return {ok:false, msg:"Insufficient data to produce a reliable scenario. The AI could not justify valuation assumptions from the available evidence."};
     const fe = s.eps*Math.pow(1+g/100, years);
     res[k] = {low: fe*lo, high: fe*hi};
   }
@@ -1137,14 +1193,22 @@ function vJournal(app){
 function vSettings(app){
   const c = cfg(), k = apiKey();
   app.innerHTML = `<h1>Settings</h1>
-  <div class="card"><h3>Claude API key</h3>
-  <p class="small muted">Powers all analysis. Get one at console.anthropic.com → API keys. It's stored only on this phone and sent only to Anthropic.</p>
-  <input class="i" id="key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(k)}">
+  <div class="card"><h3>AI connection</h3>
+  <label class="f" for="prov" style="margin-top:6px">AI provider</label>
+  <select class="i" id="prov"><option value="gemini" ${c.provider==="gemini"?"selected":""}>Google Gemini (free tier)</option><option value="claude" ${c.provider==="claude"?"selected":""}>Claude (paid)</option></select>
+  ${c.provider==="gemini"?`
+  <p class="small muted" style="margin-top:10px">Get a free key: open <strong>aistudio.google.com</strong>, sign in with Google, tap <strong>Get API key → Create API key</strong>, and copy it. No card needed. It's stored only on this phone.</p>
+  <input class="i" id="key" type="password" autocomplete="off" placeholder="Paste your Gemini key (starts with AIza…)" value="${esc(keyFor("gemini"))}">`:`
+  <p class="small muted" style="margin-top:10px">Get a key at console.anthropic.com → API keys (needs credit). It's stored only on this phone.</p>
+  <input class="i" id="key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(keyFor("claude"))}">`}
   <div class="row" style="margin-top:8px"><button class="btn primary grow" id="ksave">Save key</button><button class="btn" id="ktest">Test</button></div>
   <div id="kmsg"></div>
   <label class="f" for="mdl">Model</label>
-  <select class="i" id="mdl">${[["claude-sonnet-5","Claude Sonnet 5 (recommended)"],["claude-opus-5-5","Claude Opus 5.5 (deepest, costs more)"],["claude-haiku-4-5-20251001","Claude Haiku 4.5 (fastest, cheapest)"]].map(([v,l])=>`<option value="${v}" ${v===c.model?"selected":""}>${l}</option>`).join("")}</select>
-  <label class="row" style="margin-top:14px;gap:10px"><input type="checkbox" id="web" ${c.web?"checked":""} style="width:20px;height:20px"><span class="small"><strong>Use web search</strong><br><span class="muted">Finds the latest results, news and prices. Adds a small cost per search.</span></span></label>
+  ${c.provider==="gemini"?`<select class="i" id="mdl">${[["gemini-2.5-flash","Gemini 2.5 Flash (recommended)"],["gemini-2.5-flash-lite","Gemini 2.5 Flash-Lite (more free uses per day)"],["gemini-2.5-pro","Gemini 2.5 Pro (deepest, fewest free uses)"]].concat([["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro"].includes(c.gmodel)?[]:[[c.gmodel,c.gmodel]]]).map(([v,l])=>`<option value="${esc(v)}" ${v===c.gmodel?"selected":""}>${esc(l)}</option>`).join("")}</select>
+  <input class="i" id="mdlc" style="margin-top:8px" placeholder="Or type another model name" value="">
+  <p class="hint">If Google renames its models and you get a model error, type the new name here (listed in AI Studio).</p>`
+  :`<select class="i" id="mdl">${[["claude-sonnet-5","Claude Sonnet 5 (recommended)"],["claude-opus-5-5","Claude Opus 5.5 (deepest, costs more)"],["claude-haiku-4-5-20251001","Claude Haiku 4.5 (fastest, cheapest)"]].map(([v,l])=>`<option value="${v}" ${v===c.model?"selected":""}>${l}</option>`).join("")}</select>`}
+  <label class="row" style="margin-top:14px;gap:10px"><input type="checkbox" id="web" ${c.web?"checked":""} style="width:20px;height:20px"><span class="small"><strong>Use web search</strong><br><span class="muted">Finds the latest results, news and prices${c.provider==="gemini"?" using Google Search":""}.</span></span></label>
   </div>
   <div class="card"><label class="f" for="cur" style="margin-top:0">Currency</label>
   <select class="i" id="cur">${["₹","$","€","£"].map(x=>`<option ${x===state.currency?"selected":""}>${x}</option>`).join("")}</select></div>
@@ -1155,10 +1219,13 @@ function vSettings(app){
   ${state.stocks.map(s=>`<div class="row between small" style="margin:8px 0"><span>${esc(s.ticker)} ${esc(s.name||"")}</span><button class="btn ghost small" data-del="${s.id}">Remove</button></div>`).join("")}
   <div class="hr"></div><button class="btn block" id="wipe" style="color:var(--cha)">Delete all data</button></div>
   <div class="card"><h3>About</h3><p class="small muted">Thesis Monitor helps you track whether the reasons you invested still hold. It never tells you to buy or sell and isn't investment advice.</p></div>`;
-  $("#ksave").onclick = ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KEY_LS, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress">${v?"Saved.":"Key removed."}</div>`; };
-  $("#ktest").onclick = async ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KEY_LS, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress"><span class="spin"></span>Testing…</div>`;
+  const KL = c.provider==="claude"?KEY_LS:GKEY_LS;
+  $("#prov").onchange = e=>{ const x=cfg(); x.provider=e.target.value; x.web=true; setCfg(x); rerender(); };
+  $("#ksave").onclick = ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KL, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress">${v?"Saved.":"Key removed."}</div>`; };
+  $("#ktest").onclick = async ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KL, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress"><span class="spin"></span>Testing…</div>`;
     try{ await callClaude([{role:"user",content:"Reply with the single word: ready"}], {tier:"quick", max:10}); $("#kmsg").innerHTML = `<div class="progress">It works. You're connected.</div>`; }catch(e){ $("#kmsg").innerHTML = `<div class="err">${esc(errText(e))}</div>`; } };
-  $("#mdl").onchange = e=>{ const x=cfg(); x.model=e.target.value; setCfg(x); };
+  $("#mdl").onchange = e=>{ const x=cfg(); if(x.provider==="gemini") x.gmodel=e.target.value; else x.model=e.target.value; setCfg(x); };
+  const mc=$("#mdlc"); if(mc) mc.onchange = e=>{ const v=e.target.value.trim(); if(!v) return; const x=cfg(); x.gmodel=v; setCfg(x); rerender(); };
   $("#web").onchange = e=>{ const x=cfg(); x.web=e.target.checked; setCfg(x); };
   $("#cur").onchange = e=>{ state.currency=e.target.value; save(); };
   $("#exp").onclick = async ()=>{ const t = JSON.stringify(state); let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){}
