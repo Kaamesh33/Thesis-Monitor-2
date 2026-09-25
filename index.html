@@ -265,7 +265,7 @@ function errText(e){
   if(c==="no_key") return "Add your free Gemini API key in Settings (gear icon, top right) to use the AI features.";
   if(c==="auth") return "Your API key was rejected. Check it in Settings.";
   if(c==="credit") return "Your AI account is out of credit or over its limit.";
-  if(c==="quota") return "You've reached the free daily limit for this AI model. Try again later, or pick a lighter model (Flash-Lite) in Settings.";
+  if(c==="quota") return "Google's free limit was reached on every available model. Try again in a few hours." + (e.message? " (Google says: "+String(e.message).slice(0,180)+")" : "");
   if(c==="model") return "That AI model isn't available. Pick a different model in Settings.";
   if(c==="blocked") return "The AI declined to answer this one. Try rewording it.";
   if(c==="rate_limited") return "Too many requests at once. Wait a minute and try again.";
@@ -273,7 +273,7 @@ function errText(e){
   if(c==="invalid_json") return "The AI's answer came back in the wrong shape. Please try again.";
   if(c==="network") return "No internet connection, or the request was blocked. Check your connection and try again.";
   if(c==="cancelled") return "Stopped.";
-  return "Something went wrong" + (e&&e.message?": "+e.message:"") + ". Please try again.";
+  return "Something went wrong" + (e&&e.message?": "+String(e.message).slice(0,200):"") + ". Please try again.";
 }
 const SYSTEM = "You are Thesis Monitor, a careful equity research assistant. You help an investor track whether their own investment thesis still holds. You never give buy, sell or hold recommendations, never give price targets, and never give numeric scores.";
 async function claudeCall(messages, opt){
@@ -334,14 +334,15 @@ async function discoverGeminiModels(key){
   const lite = sortBy(ok.filter(n=>/flash-lite|flash.*lite/.test(n)));
   const main = flash[0] || sortBy(ok.slice())[0];
   if(!main) throw {code:"model", message:"no usable models for this key"};
-  return {main, quick: lite[0] || main, all: ok};
+  const ranked = [].concat(flash, lite, sortBy(ok.filter(n=>!flash.includes(n)&&!lite.includes(n))));
+  return {main, quick: lite[0] || main, all: ok, ranked};
 }
 
 async function geminiCall(messages, opt){
   opt = opt||{};
   const key = keyFor("gemini"); if(!key) throw {code:"no_key"};
   const c = cfg();
-  const model = opt.tier==="quick" ? c.gquick : c.gmodel;
+  const model = opt.model || (opt.tier==="quick" ? c.gquick : c.gmodel);
   const body = {
     systemInstruction: {parts:[{text: SYSTEM}]},
     contents: messages.map(m=>({role: m.role==="assistant"?"model":"user", parts:[{text: m.content}]})),
@@ -363,7 +364,18 @@ async function geminiCall(messages, opt){
       const c2 = cfg(); c2.gmodel = found.main; c2.gquick = found.quick; setCfg(c2);
       return geminiCall(messages, Object.assign({}, opt, {_retried:true}));
     }
-    if(res.status===429) throw {code: /quota|exhausted|per day|limit/i.test(msg)?"quota":"rate_limited", message:msg};
+    if(res.status===429){
+      // Try the other models this key can use before giving up.
+      if(!opt._q){
+        let found = null; try{ found = await discoverGeminiModels(key); }catch(e){}
+        const cands = (found ? found.ranked : []).filter(n=>n!==model).slice(0,5);
+        for(const m of cands){
+          try{ const t = await geminiCall(messages, Object.assign({}, opt, {model:m, _q:true, _retried:true})); const c2=cfg(); if(opt.tier==="quick") c2.gquick=m; else c2.gmodel=m; setCfg(c2); return t; }
+          catch(e2){ if(!e2 || e2.code!=="quota") { if(e2 && e2.code==="auth") throw e2; } }
+        }
+      }
+      throw {code:"quota", message:msg};
+    }
     if(res.status===503||res.status===500) throw {code:"overloaded", message:msg};
     if(res.status===400 && body.tools && /search|tool|grounding/i.test(msg)){ const c2=cfg(); c2.web=false; setCfg(c2); return geminiCall(messages, Object.assign({}, opt, {web:false})); }
     throw {code:"http", message: msg || ("HTTP "+res.status)};
@@ -402,8 +414,18 @@ function parseJSON(t){
 }
 async function askJSON(prompt, tier, opt){
   opt = opt||{};
-  const t = await callClaude([{role:"user", content: prompt + "\n\nYour final message must be only the JSON object, with no other text."}], {tier, max: opt.max||4000, web: opt.web, webUses: opt.webUses});
-  return parseJSON(t);
+  const msgs = [{role:"user", content: prompt + "\n\nYour final message must be only the JSON object, with no other text."}];
+  try{
+    const t = await callClaude(msgs, {tier, max: opt.max||4000, web: opt.web, webUses: opt.webUses});
+    return parseJSON(t);
+  }catch(e){
+    if(opt.web && cfg().web && e && e.code==="quota"){
+      const note = "\n\nIMPORTANT: web search is unavailable for this request. Use only the data given above and your background knowledge, label background facts as 'AI background knowledge' with their approximate period, and use null for any current figure you do not have.";
+      const t = await callClaude([{role:"user", content: prompt + note + "\n\nYour final message must be only the JSON object, with no other text."}], {tier, max: opt.max||4000, web:false});
+      const j = parseJSON(t); if(j && typeof j==="object") j._noWeb = true; return j;
+    }
+    throw e;
+  }
 }
 
 function stockContext(s){
@@ -640,7 +662,7 @@ function vStock(app, id){
     </div>
     <div id="pedit"></div>
     <p class="tiny muted" style="margin:6px 0 0">${s.priceDate?"Price updated "+ago(s.priceDate)+(s.priceSource?" ("+esc(s.priceSource)+")":""):"No current price yet"} · Horizon ${esc(s.horizon||"—")}</p>
-    ${cfg().web?`<button class="btn small block" id="lp" style="margin-top:10px">Get latest price and EPS</button><div id="lpmsg"></div>`:""}
+    <button class="btn small block" id="lp" style="margin-top:10px">Get latest price</button><div id="lpmsg"></div>
   </div>
 
   <h2>Your thesis</h2>
@@ -706,6 +728,8 @@ async function refreshPrice(s){
   $("#lpmsg").innerHTML = `<div class="progress"><span class="spin"></span>Looking up ${esc(s.ticker)}…</div>`;
   const prompt = `Use web search to find the latest share price and trailing twelve-month EPS for ${s.name||s.ticker} (ticker ${s.ticker}${s.exchange?", "+s.exchange:""}). Quote the price in the stock's own trading currency.
 Reply with only JSON: {"price": number|null, "currency": "e.g. INR or USD", "price_date": "date of the price", "eps_ttm": number|null, "source": "site name"}. Use null for anything you cannot find reliably. Never guess.`;
+  const live = await yahooLive(s.ticker, /\.|NSE|BSE|India/i.test((s.exchange||"")+state.currency) || state.currency==="₹" ? "India (NSE/BSE)" : "US");
+  if(live && live.price!=null){ s.price = live.price; s.priceDate = now(); s.priceSource = "Yahoo Finance"; save(); rerender(); return; }
   try{
     const out = await askJSON(prompt, "default", {web:true, webUses:3, max:1500});
     if(out.price==null || isNaN(Number(out.price))) throw {code:"http", message:"couldn't find a reliable price"};
@@ -969,12 +993,53 @@ function money2(n, cur){
 }
 function num(v){ const n = Number(v); return v==null||v===""||isNaN(n) ? null : n; }
 
+async function httpJSON(url){
+  const CH = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp;
+  if(CH && CH.request){
+    const r = await CH.request({url, method:"GET", headers:{"Accept":"application/json","User-Agent":"Mozilla/5.0"}});
+    if(r.status<200||r.status>=300) throw new Error("HTTP "+r.status);
+    return typeof r.data==="string" ? JSON.parse(r.data) : r.data;
+  }
+  const r = await fetch(url); if(!r.ok) throw new Error("HTTP "+r.status); return r.json();
+}
+async function yahooSymbol(q, market){
+  const Q = q.trim().toUpperCase();
+  const j = await httpJSON("https://query2.finance.yahoo.com/v1/finance/search?quotesCount=8&newsCount=0&q="+encodeURIComponent(q));
+  const qs = (j.quotes||[]).filter(x=>x.symbol && (x.quoteType==="EQUITY"||x.quoteType==="ETF"));
+  const india = x=>/\.(NS|BO)$/.test(x.symbol);
+  let pick;
+  if(/India/.test(market)) pick = qs.find(x=>x.symbol===Q+".NS") || qs.find(x=>/\.NS$/.test(x.symbol)) || qs.find(india);
+  else if(market==="US") pick = qs.find(x=>x.symbol===Q) || qs.find(x=>!/\./.test(x.symbol));
+  pick = pick || qs[0];
+  if(!pick && /India/.test(market)) return {symbol: Q+".NS", name:""};
+  return pick ? {symbol: pick.symbol, name: pick.longname||pick.shortname||""} : null;
+}
+async function yahooLive(q, market){
+  try{
+    const s = await yahooSymbol(q, market); if(!s) return null;
+    const j = await httpJSON("https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(s.symbol)+"?range=1y&interval=1d");
+    const r = j.chart && j.chart.result && j.chart.result[0]; if(!r) return null;
+    const m = r.meta||{}; const closes = ((r.indicators&&r.indicators.quote&&r.indicators.quote[0]&&r.indicators.quote[0].close)||[]).filter(v=>v!=null);
+    const avg = n=> closes.length>=n ? closes.slice(-n).reduce((a,b)=>a+b,0)/n : null;
+    const price = m.regularMarketPrice ?? closes[closes.length-1];
+    const prev = m.chartPreviousClose!=null && closes.length>1 ? closes[closes.length-2] : m.previousClose;
+    const hi = m.fiftyTwoWeekHigh ?? (closes.length?Math.max(...closes):null), lo = m.fiftyTwoWeekLow ?? (closes.length?Math.min(...closes):null);
+    const t = m.regularMarketTime ? new Date(m.regularMarketTime*1000) : new Date();
+    return {symbol:s.symbol, name: s.name || m.longName || m.shortName || "", currency:m.currency, exchange: m.fullExchangeName||m.exchangeName,
+      price, day_change_pct: prev? (price-prev)/prev*100 : null, high_52w:hi, low_52w:lo, dma_50:avg(50), dma_200:avg(200),
+      price_as_of: t.toLocaleString(undefined,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+" (Yahoo Finance, may be delayed)"};
+  }catch(e){ console.warn("live data unavailable", e); return null; }
+}
+
 async function runSearch(q, market){
   if(!q){ $("#smsg").innerHTML = `<div class="err">Type a company name or ticker.</div>`; return; }
-  if(!cfg().web){ $("#smsg").innerHTML = `<div class="err">Stock search needs web search. Turn it on in Settings.</div>`; return; }
+
   $("#sgo").disabled = true;
-  $("#smsg").innerHTML = `<div class="progress"><span class="spin"></span>Searching live market data and news for ${esc(q)}. This takes 30–90 seconds.</div>`;
-  const prompt = `Use web search to collect CURRENT market data for the listed stock "${q}" (market: ${market}). Today is ${new Date().toISOString().slice(0,10)}.
+  $("#smsg").innerHTML = `<div class="progress"><span class="spin"></span>Getting live prices for ${esc(q)}…</div>`;
+  const live = await yahooLive(q, market);
+  const pm = $("#smsg"); if(pm) pm.innerHTML = `<div class="progress"><span class="spin"></span>${live?"Live price found. ":""}Searching fundamentals and news. This takes 30–90 seconds.</div>`;
+  const liveTxt = live ? `\nLIVE MARKET DATA (Yahoo Finance, fetched just now; treat as correct): symbol ${live.symbol}, price ${live.price} ${live.currency||""}, 52-week high ${live.high_52w}, low ${live.low_52w}, 50-day avg ${live.dma_50!=null?live.dma_50.toFixed(2):"n/a"}, 200-day avg ${live.dma_200!=null?live.dma_200.toFixed(2):"n/a"}.\n` : "";
+  const prompt = liveTxt + `Use web search to collect CURRENT market data for the listed stock "${q}" (market: ${market}). Today is ${new Date().toISOString().slice(0,10)}.
 Search reliable sources such as the exchange website, Screener, Moneycontrol, Economic Times, Yahoo Finance, Google Finance, Reuters or the company's own filings. Prefer the most recent figures and note the date for each source.
 Report facts only. Do not recommend buying or selling, and do not predict the price. Use null for anything you cannot find reliably; never guess or estimate a number.
 
@@ -995,7 +1060,15 @@ Reply with only JSON:
  "sources": [{"name": "...", "date": "..."}]}
 Include up to 5 news items from the last 3 months.`;
   try{
-    const data = await askJSON(prompt, "default", {web:true, webUses:8, max:6000});
+    let data, aiErr = null;
+    try{ data = await askJSON(prompt, "default", {web:true, webUses:8, max:6000}); }
+    catch(e){ if(!live) throw e; aiErr = e; data = {}; }
+    if(live){
+      data.name = data.name || live.name; data.ticker = data.ticker || live.symbol.replace(/\.(NS|BO)$/,""); data.exchange = data.exchange || live.exchange; data.currency = live.currency || data.currency;
+      ["price","day_change_pct","high_52w","low_52w","dma_50","dma_200","price_as_of"].forEach(k=>{ if(live[k]!=null) data[k] = live[k]; });
+      data.sources = [{name:"Yahoo Finance (price, 52-week range, averages)", date:"today"}].concat(data.sources||[]);
+    }
+    if(aiErr) data._aiError = errText(aiErr);
     if(!data || (!data.name && !data.ticker)) throw {code:"http", message:"couldn't identify that stock"};
     const r = {id:uid(), q, market, date:now(), data};
     state.searches = state.searches||[]; state.searches.push(r); save();
@@ -1091,6 +1164,8 @@ function vQuote(app, id){
   </div>
   <div class="row" style="align-items:baseline;gap:10px;margin-top:10px"><span style="font-size:30px;font-weight:600">${M(p)}</span>${dc!=null?`<span class="${dc>=0?"pos-t":"neg-t"}" style="font-weight:500">${pct(dc)} today</span>`:""}</div>
   <p class="tiny muted">${esc(d.price_as_of?"Price as of "+d.price_as_of:"")} · searched ${ago(r.date)}. Check your broker app for the live price before trading.</p>
+  ${d._aiError?`<div class="note">Showing live price data only. The AI part couldn't run: ${esc(d._aiError)}</div>`:""}
+  ${d._noWeb?`<div class="note">Google's free web search limit was reached, so fundamentals and news come from the AI's background knowledge and may be out of date.</div>`:""}
 
   <h2>Market signals</h2>
   <div class="card">
