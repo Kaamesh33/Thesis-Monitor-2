@@ -255,7 +255,7 @@ function thesisStatus(s){
 
 /* ---------- AI providers: Gemini (free tier) or Claude (paid) ---------- */
 const KEY_LS="tm_api_key", GKEY_LS="tm_gemini_key", CFG_LS="tm_cfg";
-const CFG_DEFAULT = {provider:"gemini", model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", gmodel:"gemini-2.5-flash", gquick:"gemini-2.5-flash-lite", web:true};
+const CFG_DEFAULT = {provider:"gemini", model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", gmodel:"gemini-flash-latest", gquick:"gemini-flash-lite-latest", web:true};
 function cfg(){ try{ return Object.assign({}, CFG_DEFAULT, JSON.parse(localStorage.getItem(CFG_LS)||"{}")); }catch(e){ return Object.assign({}, CFG_DEFAULT); } }
 function setCfg(c){ try{ localStorage.setItem(CFG_LS, JSON.stringify(c)); }catch(e){} }
 function keyFor(p){ try{ return localStorage.getItem(p==="claude"?KEY_LS:GKEY_LS)||""; }catch(e){ return ""; } }
@@ -319,6 +319,24 @@ async function claudeCall(messages, opt){
   }
   return text;
 }
+/* Ask Google which models this key can use, and pick the newest Flash models. */
+async function discoverGeminiModels(key){
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", {headers:{"x-goog-api-key":key}});
+  if(!res.ok){ if(res.status===400||res.status===401||res.status===403) throw {code:"auth"}; throw {code:"network"}; }
+  const j = await res.json();
+  const ok = (j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent"))
+    .map(m=>m.name.replace(/^models\//,""))
+    .filter(n=>/gemini/i.test(n) && !/image|tts|audio|live|embed|vision|robotics|computer|learnlm|gemma|native|thinking-exp/i.test(n));
+  const ver = n=>{ const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m?parseFloat(m[1]):0; };
+  const rank = n=> ver(n)*100 + (/latest/.test(n)?5:0) - (/preview|exp/.test(n)?3:0) - (/\d{3,}$/.test(n)?1:0);
+  const sortBy = a=>a.sort((x,y)=>rank(y)-rank(x));
+  const flash = sortBy(ok.filter(n=>/flash/.test(n) && !/lite/.test(n)));
+  const lite = sortBy(ok.filter(n=>/flash-lite|flash.*lite/.test(n)));
+  const main = flash[0] || sortBy(ok.slice())[0];
+  if(!main) throw {code:"model", message:"no usable models for this key"};
+  return {main, quick: lite[0] || main, all: ok};
+}
+
 async function geminiCall(messages, opt){
   opt = opt||{};
   const key = keyFor("gemini"); if(!key) throw {code:"no_key"};
@@ -339,7 +357,12 @@ async function geminiCall(messages, opt){
     let msg="", st=""; try{ const j=await res.json(); msg = j.error&&j.error.message||""; st = j.error&&j.error.status||""; }catch(e){}
     if(res.status===400 && /API key|API_KEY/i.test(msg)) throw {code:"auth", message:msg};
     if(res.status===401||res.status===403) throw {code:"auth", message:msg};
-    if(res.status===404) throw {code:"model", message:msg};
+    if(res.status===404 || (res.status===400 && /model/i.test(msg) && /not found|not supported|invalid/i.test(msg))){
+      if(opt._retried) throw {code:"model", message:msg};
+      const found = await discoverGeminiModels(key);
+      const c2 = cfg(); c2.gmodel = found.main; c2.gquick = found.quick; setCfg(c2);
+      return geminiCall(messages, Object.assign({}, opt, {_retried:true}));
+    }
     if(res.status===429) throw {code: /quota|exhausted|per day|limit/i.test(msg)?"quota":"rate_limited", message:msg};
     if(res.status===503||res.status===500) throw {code:"overloaded", message:msg};
     if(res.status===400 && body.tools && /search|tool|grounding/i.test(msg)){ const c2=cfg(); c2.web=false; setCfg(c2); return geminiCall(messages, Object.assign({}, opt, {web:false})); }
@@ -1204,9 +1227,10 @@ function vSettings(app){
   <div class="row" style="margin-top:8px"><button class="btn primary grow" id="ksave">Save key</button><button class="btn" id="ktest">Test</button></div>
   <div id="kmsg"></div>
   <label class="f" for="mdl">Model</label>
-  ${c.provider==="gemini"?`<select class="i" id="mdl">${[["gemini-2.5-flash","Gemini 2.5 Flash (recommended)"],["gemini-2.5-flash-lite","Gemini 2.5 Flash-Lite (more free uses per day)"],["gemini-2.5-pro","Gemini 2.5 Pro (deepest, fewest free uses)"]].concat([["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro"].includes(c.gmodel)?[]:[[c.gmodel,c.gmodel]]]).map(([v,l])=>`<option value="${esc(v)}" ${v===c.gmodel?"selected":""}>${esc(l)}</option>`).join("")}</select>
-  <input class="i" id="mdlc" style="margin-top:8px" placeholder="Or type another model name" value="">
-  <p class="hint">If Google renames its models and you get a model error, type the new name here (listed in AI Studio).</p>`
+  ${c.provider==="gemini"?`<select class="i" id="mdl">${[["gemini-flash-latest","Gemini Flash, latest (recommended)"],["gemini-flash-lite-latest","Gemini Flash-Lite, latest (more free uses)"],["gemini-pro-latest","Gemini Pro, latest (deepest, fewest free uses)"]].concat(["gemini-flash-latest","gemini-flash-lite-latest","gemini-pro-latest"].includes(c.gmodel)?[]:[[c.gmodel,c.gmodel+" (auto-detected)"]]).map(([v,l])=>`<option value="${esc(v)}" ${v===c.gmodel?"selected":""}>${esc(l)}</option>`).join("")}</select>
+  <button class="btn small block" id="mdet" style="margin-top:8px">Find models for my key</button>
+  <input class="i" id="mdlc" style="margin-top:8px" placeholder="Or type a model name" value="">
+  <p class="hint">If you ever see a model error, tap "Find models for my key".</p>`
   :`<select class="i" id="mdl">${[["claude-sonnet-5","Claude Sonnet 5 (recommended)"],["claude-opus-5-5","Claude Opus 5.5 (deepest, costs more)"],["claude-haiku-4-5-20251001","Claude Haiku 4.5 (fastest, cheapest)"]].map(([v,l])=>`<option value="${v}" ${v===c.model?"selected":""}>${l}</option>`).join("")}</select>`}
   <label class="row" style="margin-top:14px;gap:10px"><input type="checkbox" id="web" ${c.web?"checked":""} style="width:20px;height:20px"><span class="small"><strong>Use web search</strong><br><span class="muted">Finds the latest results, news and prices${c.provider==="gemini"?" using Google Search":""}.</span></span></label>
   </div>
@@ -1224,8 +1248,12 @@ function vSettings(app){
   $("#ksave").onclick = ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KL, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress">${v?"Saved.":"Key removed."}</div>`; };
   $("#ktest").onclick = async ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KL, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress"><span class="spin"></span>Testing…</div>`;
     try{ await callClaude([{role:"user",content:"Reply with the single word: ready"}], {tier:"quick", max:10}); $("#kmsg").innerHTML = `<div class="progress">It works. You're connected.</div>`; }catch(e){ $("#kmsg").innerHTML = `<div class="err">${esc(errText(e))}</div>`; } };
-  $("#mdl").onchange = e=>{ const x=cfg(); if(x.provider==="gemini") x.gmodel=e.target.value; else x.model=e.target.value; setCfg(x); };
-  const mc=$("#mdlc"); if(mc) mc.onchange = e=>{ const v=e.target.value.trim(); if(!v) return; const x=cfg(); x.gmodel=v; setCfg(x); rerender(); };
+  $("#mdl").onchange = e=>{ const x=cfg(); if(x.provider==="gemini"){ x.gmodel=e.target.value; x.gquick = /pro/.test(e.target.value)?"gemini-flash-latest":"gemini-flash-lite-latest"; } else x.model=e.target.value; setCfg(x); };
+  const mc=$("#mdlc"); if(mc) mc.onchange = e=>{ const v=e.target.value.trim(); if(!v) return; const x=cfg(); x.gmodel=v; x.gquick=v; setCfg(x); rerender(); };
+  const md=$("#mdet"); if(md) md.onclick = async ()=>{ const v=$("#key").value.trim(); if(v){ try{ localStorage.setItem(KL, v); }catch(e){} }
+    $("#kmsg").innerHTML = `<div class="progress"><span class="spin"></span>Asking Google which models your key can use…</div>`;
+    try{ const f = await discoverGeminiModels(keyFor("gemini")); const x=cfg(); x.gmodel=f.main; x.gquick=f.quick; setCfg(x); rerender(); setTimeout(()=>{ const m=$("#kmsg"); if(m) m.innerHTML = `<div class="progress">Using ${esc(f.main)}${f.quick!==f.main?" (and "+esc(f.quick)+" for quick tasks)":""}. Tap Test.</div>`; },30); }
+    catch(e){ $("#kmsg").innerHTML = `<div class="err">${esc(errText(e))}</div>`; } };
   $("#web").onchange = e=>{ const x=cfg(); x.web=e.target.checked; setCfg(x); };
   $("#cur").onchange = e=>{ state.currency=e.target.value; save(); };
   $("#exp").onclick = async ()=>{ const t = JSON.stringify(state); let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){}
