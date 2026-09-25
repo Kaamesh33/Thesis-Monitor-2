@@ -1,0 +1,7 @@
+{
+  "appId": "app.thesismonitor.mobile",
+  "appName": "Thesis Monitor",
+  "webDir": "www",
+  "android": { "backgroundColor": "#F5F7F6" },
+  "ios": { "backgroundColor": "#F5F7F6", "contentInset": "never" }
+}

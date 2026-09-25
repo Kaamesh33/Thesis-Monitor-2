@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thesis Monitor</title>
+<meta name="theme-color" content="#1F4E5F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Thesis">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F6; --surface:#FFFFFF; --ink:#16213A; --muted:#5E6675; --rule:#DCE1E4;
+  --petrol:#1F4E5F; --petrol-ink:#FFFFFF; --petrol-soft:#E4EEF0;
+  --sup:#2F7D4F; --mon:#A86B12; --cha:#B42318; --ins:#8C929B;
+  --sup-bg:#E7F2EB; --mon-bg:#F7EEDD; --cha-bg:#F9E4E2; --ins-bg:#EEF0F2;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --serif:"Newsreader", Georgia, "Times New Roman", serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1622; --surface:#172131; --ink:#E6EAF0; --muted:#9AA3B2; --rule:#2A3647;
+    --petrol:#5FA3B8; --petrol-ink:#0B1520; --petrol-soft:#1C3440;
+    --sup:#5DBB84; --mon:#E0A748; --cha:#F07A6E; --ins:#9AA0A8;
+    --sup-bg:#16301F; --mon-bg:#33270F; --cha-bg:#3A1A17; --ins-bg:#222B37;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1622; --surface:#172131; --ink:#E6EAF0; --muted:#9AA3B2; --rule:#2A3647;
+  --petrol:#5FA3B8; --petrol-ink:#0B1520; --petrol-soft:#1C3440;
+  --sup:#5DBB84; --mon:#E0A748; --cha:#F07A6E; --ins:#9AA0A8;
+  --sup-bg:#16301F; --mon-bg:#33270F; --cha-bg:#3A1A17; --ins-bg:#222B37;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+a{color:var(--petrol)}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 110px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 4px;max-width:720px;margin:0 auto}
+.brand{font-weight:600;letter-spacing:-.01em;font-size:17px;display:flex;align-items:center;gap:8px}
+.brand-mark{width:22px;height:22px;border-radius:6px;background:var(--petrol);display:grid;place-items:center}
+.brand-mark::after{content:"";width:8px;height:8px;border:2px solid var(--petrol-ink);border-radius:50%}
+.iconbtn{background:none;border:0;padding:8px;border-radius:10px;color:var(--muted);cursor:pointer}
+.iconbtn:active{background:var(--rule)}
+h1{font-size:26px;line-height:1.2;letter-spacing:-.015em;margin:8px 0 4px;font-weight:600}
+h2{font-size:19px;line-height:1.3;margin:28px 0 10px;font-weight:600;letter-spacing:-.01em}
+h3{font-size:16px;margin:0 0 4px;font-weight:600}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.tiny{font-size:12.5px}
+.serif{font-family:var(--serif);font-size:18px;line-height:1.6}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px;margin:0 0 12px}
+.card.tight{padding:12px 14px}
+.row{display:flex;gap:12px;align-items:center}
+.between{justify-content:space-between}
+.wrapflex{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.hr{height:1px;background:var(--rule);margin:14px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--rule);background:var(--surface);border-radius:12px;padding:11px 16px;font-weight:500;cursor:pointer;text-decoration:none;color:var(--ink);min-height:44px}
+.btn.primary{background:var(--petrol);border-color:var(--petrol);color:var(--petrol-ink)}
+.btn.block{width:100%}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.small{min-height:36px;padding:7px 12px;font-size:14px}
+.big-action{width:100%;background:var(--petrol);color:var(--petrol-ink);border:0;border-radius:16px;padding:18px 20px;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.big-action .t{font-size:22px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.big-action .s{font-size:14px;opacity:.85;margin-top:2px}
+.big-action:disabled{opacity:.7}
+label.f{display:block;font-size:14px;font-weight:500;margin:14px 0 6px}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+input.i,textarea.i,select.i{width:100%;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:11px 12px;font-size:16px}
+textarea.i{min-height:120px;resize:vertical;line-height:1.5}
+textarea.serif-in{font-family:var(--serif);font-size:18px}
+input.i:focus,textarea.i:focus,select.i:focus{outline:2px solid var(--petrol);outline-offset:1px;border-color:transparent}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two > div{min-width:0}
+/* status marks: shape + colour */
+.st{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;padding:3px 10px 3px 8px;border-radius:999px;white-space:nowrap}
+.mk{width:11px;height:11px;flex:none;display:inline-block}
+.st.supported{background:var(--sup-bg);color:var(--sup)} .mk.supported{background:var(--sup);border-radius:50%}
+.st.monitor{background:var(--mon-bg);color:var(--mon)} .mk.monitor{border-radius:50%;background:linear-gradient(90deg,var(--mon) 50%,transparent 50%);border:1.5px solid var(--mon)}
+.st.challenged{background:var(--cha-bg);color:var(--cha)} .mk.challenged{background:var(--cha);transform:rotate(45deg) scale(.82);border-radius:1px}
+.st.insufficient{background:var(--ins-bg);color:var(--ins)} .mk.insufficient{border:2px solid var(--ins);border-radius:50%}
+.tag{display:inline-block;font-size:12.5px;padding:2px 9px;border-radius:999px;background:var(--ins-bg);color:var(--muted);font-weight:500}
+.tag.pos{background:var(--sup-bg);color:var(--sup)} .tag.neg{background:var(--cha-bg);color:var(--cha)} .tag.neu{background:var(--petrol-soft);color:var(--petrol)}
+.brief{font-family:var(--serif);font-size:22px;line-height:1.45;margin:6px 0 18px;letter-spacing:-.005em}
+.hold{display:block;text-decoration:none;color:inherit}
+.hold .tk{font-weight:600;font-size:17px}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kv div{min-width:0}
+.kv .k{font-size:12.5px;color:var(--muted)}
+.kv .v{font-weight:500;font-size:15px;overflow:hidden;text-overflow:ellipsis}
+.pos-t{color:var(--sup)} .neg-t{color:var(--cha)}
+.pillar{border-left:3px solid var(--rule);padding:2px 0 2px 12px;margin:14px 0}
+.pillar.supported{border-color:var(--sup)} .pillar.monitor{border-color:var(--mon)} .pillar.challenged{border-color:var(--cha)} .pillar.insufficient{border-color:var(--ins)}
+.quote{font-family:var(--serif);font-style:italic;color:var(--muted);font-size:16px;line-height:1.5;margin:4px 0}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+.split{display:grid;gap:10px;margin:10px 0}
+.split .lab{font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.said{background:var(--paper);border-radius:10px;padding:10px 12px}
+.ai{background:var(--petrol-soft);border-radius:10px;padding:10px 12px}
+.ev{font-size:13.5px;color:var(--muted);margin:6px 0 0;padding-left:0;list-style:none}
+.ev li{padding:3px 0}
+.ev li::before{content:"↳ ";color:var(--petrol)}
+ul.watch{margin:6px 0 0;padding-left:18px;font-size:14.5px}
+.bb{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bb > div{border-radius:10px;padding:10px 12px;min-width:0}
+.bb .bull{background:var(--sup-bg)} .bb .bear{background:var(--cha-bg)}
+.scen{display:grid;gap:10px}
+.scen .sc{border:1px solid var(--rule);border-radius:12px;padding:12px}
+.strip{position:relative;height:44px;margin:14px 4px 4px}
+.strip .ax{position:absolute;left:0;right:0;top:20px;height:2px;background:var(--rule)}
+.strip .rg{position:absolute;top:14px;height:14px;border-radius:4px;opacity:.85}
+.strip .now{position:absolute;top:4px;bottom:4px;width:2px;background:var(--ink)}
+.strip .nowl{position:absolute;top:-14px;font-size:11.5px;transform:translateX(-50%);white-space:nowrap}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 16px 22px}
+.tl li::before{content:"";position:absolute;left:5px;top:8px;width:8px;height:8px;border-radius:50%;background:var(--petrol)}
+.tl li::after{content:"";position:absolute;left:8.5px;top:18px;bottom:0;width:1px;background:var(--rule)}
+.tl li:last-child::after{display:none}
+nav.bottom{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
+nav.bottom .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.bottom a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 2px 8px;font-size:11.5px;color:var(--muted);text-decoration:none;position:relative}
+nav.bottom a.on{color:var(--petrol);font-weight:600}
+nav.bottom svg{width:22px;height:22px}
+.dot{position:absolute;top:6px;left:calc(50% + 6px);min-width:16px;height:16px;border-radius:8px;background:var(--cha);color:#fff;font-size:10.5px;display:grid;place-items:center;padding:0 4px;font-weight:600}
+.fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:19;border-radius:999px;box-shadow:0 6px 20px rgba(22,33,58,.22)}
+.spin{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.progress{display:flex;gap:10px;align-items:center;padding:14px;border-radius:12px;background:var(--petrol-soft);color:var(--petrol);font-size:14.5px;margin:10px 0}
+.err{background:var(--cha-bg);color:var(--cha);border-radius:12px;padding:12px 14px;font-size:14.5px;margin:10px 0}
+.note{background:var(--mon-bg);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px;margin:10px 0}
+.empty{text-align:center;padding:36px 12px}
+.chat{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.msg{padding:10px 13px;border-radius:14px;max-width:88%;white-space:pre-wrap;word-wrap:break-word;font-size:15.5px}
+.msg.u{align-self:flex-end;background:var(--petrol);color:var(--petrol-ink);border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:var(--surface);border:1px solid var(--rule);border-bottom-left-radius:4px}
+.composer{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom,0px));background:var(--paper);padding:8px 0}
+.back{display:inline-flex;align-items:center;gap:4px;color:var(--muted);text-decoration:none;font-size:14.5px;margin-bottom:4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:14px;cursor:pointer}
+.bar{height:8px;border-radius:4px;background:var(--rule);overflow:hidden;margin-top:4px}
+.bar > i{display:block;height:100%;background:var(--petrol)}
+.searchbar{display:flex;gap:8px}
+.meter{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--sup) 0%,var(--sup) 33%,var(--petrol) 33%,var(--petrol) 66%,var(--cha) 66%);opacity:.85;margin:22px 2px 6px}
+.meter .pin{position:absolute;top:-6px;width:4px;height:22px;background:var(--ink);border-radius:2px;transform:translateX(-50%)}
+.meter .pl{position:absolute;top:-22px;font-size:11.5px;transform:translateX(-50%);white-space:nowrap;font-weight:600}
+.mlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.sig{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--rule);font-size:14.5px}
+.sig:first-of-type{border-top:0}
+.lean{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:2px 0}
+.lean.pos{color:var(--sup)} .lean.neg{color:var(--cha)} .lean.mix{color:var(--mon)}
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:0 16px}
+.facts div{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid var(--rule);font-size:14.5px;gap:8px}
+.facts div span:first-child{color:var(--muted)}
+@media (min-width:560px){ .facts{grid-template-columns:repeat(3,1fr)} }
+.footer-note{font-size:12.5px;color:var(--muted);margin-top:30px;text-align:center}
+.unread{border-left:3px solid var(--petrol)}
+@media (min-width:560px){ .split{grid-template-columns:1fr 1fr} .scen{grid-template-columns:repeat(3,1fr)} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="brand-mark" aria-hidden="true"></span>Thesis Monitor</div>
+  <a class="iconbtn" href="#/settings" aria-label="Settings">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+  </a>
+</header>
+<main class="wrap" id="app"><p class="muted">Loading…</p></main>
+<nav class="bottom" aria-label="Main"><div class="in" id="nav"></div></nav>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- constants ---------- */
+const STATUS = {
+  supported:{label:"Supported", say:"Recent evidence is consistent with this part of your thesis."},
+  monitor:{label:"Needs monitoring", say:"Evidence is mixed or early. Worth watching."},
+  challenged:{label:"Potentially challenged", say:"Recent evidence cuts against this part of your thesis."},
+  insufficient:{label:"Insufficient evidence", say:"Not enough reliable information yet to judge."}
+};
+const STATUS_KEYS = Object.keys(STATUS);
+const RULES = `Rules you must follow:
+- Never tell the user to buy, sell, hold, add or trim. Never give a price target or a recommendation.
+- Never give numeric scores or probabilities.
+- Pillar statuses may only be: supported, monitor, challenged, insufficient.
+- Keep what the company said separate from your own interpretation.
+- Only use facts from (a) the material the user pasted, (b) web search results if you have the web search tool, or (c) your own background knowledge. Label every piece of evidence with its source (publication or document name) and date. For background knowledge, use source "Claude background knowledge" with the approximate period; it may be outdated. Prefer the most recent reliable sources: company filings, results releases, earnings calls, exchange announcements, and established financial news.
+- Never invent figures, dates or quotes. If you do not have reliable information, say so and use status "insufficient".
+- Plain English. No hype.`;
+
+/* ---------- state ---------- */
+const LS_KEY = "tm_state_v1";
+let state = blank();
+
+let saveTimer = null, busy = {};
+function blank(){ return {v:1, currency:"₹", stocks:[], alerts:[], journal:[], searches:[]}; }
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+function now(){ return new Date().toISOString(); }
+function lsGet(){ try{ const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function lsSet(s){ try{ localStorage.setItem(LS_KEY, JSON.stringify(trimForSave(s))); }catch(e){} }
+
+function trimForSave(s){
+  const c = JSON.parse(JSON.stringify(s));
+  c.stocks.forEach(st=>{ if(st.chat && st.chat.length>30) st.chat = st.chat.slice(-30); if(st.reviews && st.reviews.length>15) st.reviews = st.reviews.slice(-15); if(st.news && st.news.length>40) st.news = st.news.slice(-40); });
+  if(c.alerts.length>100) c.alerts = c.alerts.slice(-100);
+  if(c.searches && c.searches.length>12) c.searches = c.searches.slice(-12);
+  return c;
+}
+function save(){
+  lsSet(state);
+
+}
+
+/* ---------- helpers ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function money(n){ if(n==null||isNaN(n)) return "—"; const c = state.currency; const loc = c==="₹" ? "en-IN" : "en-US"; return c + Number(n).toLocaleString(loc,{maximumFractionDigits: Math.abs(n)<100?2:0}); }
+function pct(n){ if(n==null||isNaN(n)) return "—"; return (n>0?"+":"") + n.toFixed(1) + "%"; }
+function dfmt(iso){ if(!iso) return "—"; const d = new Date(iso); if(isNaN(d)) return esc(iso); return d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
+function ago(iso){ if(!iso) return "never"; const s = (Date.now()-new Date(iso))/1000; if(s<60) return "just now"; if(s<3600) return Math.floor(s/60)+" min ago"; if(s<86400) return Math.floor(s/3600)+" h ago"; const d=Math.floor(s/86400); return d===1?"yesterday":d+" days ago"; }
+function mark(k){ k = STATUS[k]?k:"insufficient"; return `<span class="st ${k}"><span class="mk ${k}" aria-hidden="true"></span>${STATUS[k].label}</span>`; }
+function stockById(id){ return state.stocks.find(s=>s.id===id); }
+function curThesis(s){ return s.theses[s.theses.length-1]; }
+function lastOf(a){ return a && a.length ? a[a.length-1] : null; }
+function md(t){ return esc(t).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>"); }
+
+function thesisStatus(s){
+  const c = {supported:0,monitor:0,challenged:0,insufficient:0};
+  s.pillars.forEach(p=>c[p.status in c ? p.status : "insufficient"]++);
+  let k = "insufficient";
+  if(c.challenged) k = "challenged"; else if(c.monitor) k = "monitor"; else if(c.supported) k = "supported";
+  const parts = [];
+  if(c.supported) parts.push(c.supported+" supported");
+  if(c.monitor) parts.push(c.monitor+" to monitor");
+  if(c.challenged) parts.push(c.challenged+" challenged");
+  if(c.insufficient) parts.push(c.insufficient+" without enough evidence");
+  return {k, text: parts.join(", "), c};
+}
+
+/* ---------- Claude ---------- */
+/* Direct Anthropic API with the user's own key */
+const KEY_LS="tm_api_key", CFG_LS="tm_cfg";
+function apiKey(){ try{ return localStorage.getItem(KEY_LS)||""; }catch(e){ return ""; } }
+function cfg(){ try{ return Object.assign({model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", web:true}, JSON.parse(localStorage.getItem(CFG_LS)||"{}")); }catch(e){ return {model:"claude-sonnet-5", quick:"claude-haiku-4-5-20251001", web:true}; } }
+function setCfg(c){ try{ localStorage.setItem(CFG_LS, JSON.stringify(c)); }catch(e){} }
+function errText(e){
+  const c = e && e.code;
+  if(c==="no_key") return "Add your Claude API key in Settings (gear icon, top right) to use the AI features.";
+  if(c==="auth") return "Your API key was rejected. Check it in Settings.";
+  if(c==="credit") return "Your Anthropic account is out of credit. Add credit at console.anthropic.com.";
+  if(c==="rate_limited") return "Too many requests at once. Wait a minute and try again.";
+  if(c==="overloaded") return "Claude is busy right now. Try again in a minute.";
+  if(c==="invalid_json") return "Claude's answer came back in the wrong shape. Please try again.";
+  if(c==="network") return "No internet connection, or the request was blocked. Check your connection and try again.";
+  if(c==="cancelled") return "Stopped.";
+  return "Something went wrong" + (e&&e.message?": "+e.message:"") + ". Please try again.";
+}
+const SYSTEM = "You are Thesis Monitor, a careful equity research assistant. You help an investor track whether their own investment thesis still holds. You never give buy, sell or hold recommendations, never give price targets, and never give numeric scores.";
+async function callClaude(messages, opt){
+  opt = opt||{};
+  const key = apiKey(); if(!key) throw {code:"no_key"};
+  const c = cfg();
+  const body = {model: opt.tier==="quick"? c.quick : c.model, max_tokens: opt.max||3000, system: SYSTEM, messages};
+  if(c.web && opt.web) body.tools = [{type:"web_search_20250305", name:"web_search", max_uses: opt.webUses||5}];
+  if(opt.onText) body.stream = true;
+  let res;
+  try{
+    res = await fetch("https://api.anthropic.com/v1/messages", {method:"POST", headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"}, body: JSON.stringify(body), signal: opt.signal});
+  }catch(e){ if(e&&e.name==="AbortError") throw {code:"cancelled"}; throw {code:"network"}; }
+  if(!res.ok){
+    let msg=""; try{ const j=await res.json(); msg = j.error&&j.error.message||""; }catch(e){}
+    if(res.status===401||res.status===403) throw {code:"auth", message:msg};
+    if(res.status===429) throw {code:"rate_limited", message:msg};
+    if(res.status===529||res.status===503) throw {code:"overloaded", message:msg};
+    if(/credit|balance|billing/i.test(msg)) throw {code:"credit", message:msg};
+    if(res.status===400 && body.tools && /web_search|tool/i.test(msg)){ const c2=cfg(); c2.web=false; setCfg(c2); return callClaude(messages, Object.assign({}, opt, {web:false})); }
+    throw {code:"http", message: msg || ("HTTP "+res.status)};
+  }
+  if(!opt.onText){
+    const j = await res.json();
+    return (j.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  }
+  // streaming
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf="", text="", blockStart=true;
+  while(true){
+    const {done, value} = await reader.read(); if(done) break;
+    buf += dec.decode(value, {stream:true});
+    let i;
+    while((i = buf.indexOf("\n"))>=0){
+      const line = buf.slice(0,i).trim(); buf = buf.slice(i+1);
+      if(!line.startsWith("data:")) continue;
+      let ev; try{ ev = JSON.parse(line.slice(5)); }catch(e){ continue; }
+      if(ev.type==="content_block_start" && ev.content_block && ev.content_block.type==="text"){ if(text && !/\s$/.test(text)) text += ""; }
+      if(ev.type==="content_block_delta" && ev.delta && ev.delta.type==="text_delta"){ text += ev.delta.text; opt.onText({text}); }
+      if(ev.type==="content_block_start" && ev.content_block && ev.content_block.type==="server_tool_use"){ opt.onText({text: text || "Searching the web…"}); }
+      if(ev.type==="error") throw {code:"http", message: ev.error&&ev.error.message};
+    }
+  }
+  return text;
+}
+function parseJSON(t){
+  const s = t.replace(/```json|```/g,"");
+  const a = s.indexOf("{"), b = s.lastIndexOf("}");
+  if(a<0||b<a) throw {code:"invalid_json"};
+  try{ return JSON.parse(s.slice(a,b+1)); }catch(e){ throw {code:"invalid_json"}; }
+}
+async function askJSON(prompt, tier, opt){
+  opt = opt||{};
+  const t = await callClaude([{role:"user", content: prompt + "\n\nYour final message must be only the JSON object, with no other text."}], {tier, max: opt.max||4000, web: opt.web, webUses: opt.webUses});
+  return parseJSON(t);
+}
+
+function stockContext(s){
+  const t = curThesis(s);
+  return `STOCK: ${s.name || s.ticker} (${s.ticker})${s.sector?", sector: "+s.sector:""}${s.exchange?", market: "+s.exchange:""}
+Position: ${s.qty} shares at average ${money(s.avg)}. Current price (entered by user${s.priceDate?" on "+dfmt(s.priceDate):""}): ${s.price!=null?money(s.price):"unknown"}.
+Trailing EPS entered by user: ${s.eps!=null?s.eps:"not provided"}. Horizon: ${s.horizon||"not given"}. Purchased: ${s.purchaseDate||"not given"}.
+USER'S ORIGINAL THESIS (version 1, never changes): """${s.theses[0].text}"""
+${s.theses.length>1?`CURRENT THESIS (version ${t.version}): """${t.text}"""`:""}
+PILLARS:
+${s.pillars.map(p=>`- id=${p.id} | ${p.title} | status=${p.status} | user's words: "${p.quote}" | watch: ${(p.watch||[]).join("; ")}`).join("\n")}
+Today's date: ${new Date().toISOString().slice(0,10)}.`;
+}
+
+/* ---------- navigation ---------- */
+const NAV = [
+  {r:"home", l:"Home", i:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>'},
+  {r:"stocks", l:"My stocks", i:'<path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6"/>'},
+  {r:"research", l:"Search", i:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>'},
+  {r:"alerts", l:"Alerts", i:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/>'},
+  {r:"journal", l:"Journal", i:'<path d="M6 3h11a1 1 0 0 1 1 1v17l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1zM9 8h6M9 12h6"/>'}
+];
+function renderNav(active){
+  const unread = state.alerts.filter(a=>!a.read).length;
+  $("#nav").innerHTML = NAV.map(n=>`<a href="#/${n.r}" class="${n.r===active?"on":""}" ${n.r===active?'aria-current="page"':""}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${n.i}</svg>
+    ${n.r==="alerts"&&unread?`<span class="dot">${unread}</span>`:""}${n.l}</a>`).join("");
+}
+function route(){
+  const h = (location.hash||"#/home").slice(2).split("/");
+  const v = h[0]||"home", id = h[1], sub = h[2];
+  const app = $("#app");
+  let active = v;
+  if(v==="stock"||v==="add") active = "stocks";
+  if(v==="chat"||v==="quote") active = "research";
+  renderNav(active);
+  const views = {home:vHome, stocks:vStocks, add:vAdd, stock:a=>sub==="thesis"?vRevise(a,id):vStock(a,id), research:vResearch, quote:a=>vQuote(a,id), chat:a=>vChat(a,id), alerts:vAlerts, journal:vJournal, settings:vSettings};
+  (views[v]||vHome)(app);
+  if(!window.__keepScroll) window.scrollTo(0,0);
+  window.__keepScroll = false;
+}
+function rerender(){ window.__keepScroll = true; route(); }
+window.addEventListener("hashchange", route);
+
+/* ---------- views ---------- */
+function vHome(app){
+  if(!state.stocks.length){
+    app.innerHTML = `
+      <p class="brief" style="margin-top:18px">Know when your investment thesis changes.</p>
+      <p class="muted">Write down why you own a stock. Thesis Monitor breaks it into the few things that must stay true, then checks new results and news against them, with evidence and dates.</p>
+      <div class="card" style="margin-top:20px">
+        <h3>Start with a stock you own</h3>
+        <p class="small muted">Takes about two minutes. You'll need the ticker, your quantity and average price, and a few sentences on why you bought it.</p>
+        ${apiKey()?"":`<p class="small">First, <a href="#/settings">add your Claude API key</a> so the app can analyse your thesis.</p>`}
+        <a class="btn primary block" href="#/add">Add a stock</a>
+      </div>
+      <a class="card hold" href="#/research" style="display:block"><h3>Search any stock</h3><p class="small muted" style="margin:0">Live price, value zone, trend, analyst targets and news.</p></a>
+      <div class="card">
+        <h3>Or look around first</h3>
+        <p class="small muted">Loads an example holding in a made-up company, Northwind Infotech, with a review, outlook and alerts already filled in. You can delete it any time in Settings.</p>
+        <button class="btn block" id="demo">Load the example</button>
+      </div>
+      <p class="footer-note">Research support, not investment advice. Thesis Monitor never tells you to buy or sell.</p>`;
+    $("#demo").onclick = ()=>{ loadDemo(); location.hash = "#/home"; route(); };
+    return;
+  }
+  const hs = state.stocks.map(s=>({s, ts:thesisStatus(s)}));
+  const val = state.stocks.reduce((a,s)=>a+(s.qty*(s.price??s.avg)),0);
+  const cost = state.stocks.reduce((a,s)=>a+s.qty*s.avg,0);
+  const cha = hs.filter(x=>x.ts.c.challenged);
+  const mon = hs.filter(x=>!x.ts.c.challenged && x.ts.c.monitor);
+  const never = state.stocks.filter(s=>!s.reviews.length);
+  let brief = `You hold ${state.stocks.length} stock${state.stocks.length>1?"s":""}. `;
+  if(cha.length) brief += `${cha.map(x=>x.s.ticker).join(", ")} ${cha.length>1?"have":"has"} a pillar that looks potentially challenged. `;
+  if(mon.length) brief += `${mon.map(x=>x.s.ticker).join(", ")} ${mon.length>1?"have":"has"} something worth monitoring. `;
+  if(!cha.length && !mon.length && state.stocks.some(s=>s.reviews.length)) brief += `No reviewed pillar currently looks challenged. `;
+  if(never.length) brief += `${never.map(s=>s.ticker).join(", ")} ${never.length>1?"haven't":"hasn't"} been reviewed yet.`;
+
+  // sector exposure
+  const sec = {};
+  state.stocks.forEach(s=>{ const k = s.sector||"Unassigned"; sec[k]=(sec[k]||0)+s.qty*(s.price??s.avg); });
+  const secRows = Object.entries(sec).sort((a,b)=>b[1]-a[1]);
+  const largest = state.stocks.map(s=>({s,v:s.qty*(s.price??s.avg)})).sort((a,b)=>b.v-a.v)[0];
+  const recent = [];
+  state.stocks.forEach(s=>{
+    s.reviews.forEach(r=>recent.push({d:r.date, s, t:"What Changed review", x:r.summary}));
+    s.outlooks.forEach(o=>recent.push({d:o.date, s, t:"Outlook updated", x:o.change||o.summary}));
+  });
+  recent.sort((a,b)=>b.d.localeCompare(a.d));
+  const unread = state.alerts.filter(a=>!a.read);
+
+  app.innerHTML = `
+    ${apiKey()?"":`<a class="card tight hold note" href="#/settings" style="display:block"><strong>Connect Claude to turn on analysis.</strong><br><span class="small">Add your API key in Settings.</span></a>`}
+    <p class="brief">${esc(brief.trim())}</p>
+    ${unread.length?`<a class="card tight hold unread" href="#/alerts"><div class="row between"><span><strong>${unread.length} new alert${unread.length>1?"s":""}</strong><br><span class="small muted">${esc(unread[unread.length-1].title)}</span></span><span aria-hidden="true">›</span></div></a>`:""}
+    <div class="card tight">
+      <div class="kv">
+        <div><div class="k">Value</div><div class="v">${money(val)}</div></div>
+        <div><div class="k">Cost</div><div class="v">${money(cost)}</div></div>
+        <div><div class="k">Change</div><div class="v ${val>=cost?"pos-t":"neg-t"}">${pct(cost?(val-cost)/cost*100:null)}</div></div>
+      </div>
+      <p class="tiny muted" style="margin:8px 0 0">Uses the prices you last entered.</p>
+    </div>
+    <h2>Holdings</h2>
+    ${hs.map(x=>holdCard(x.s,x.ts)).join("")}
+    <h2>Portfolio facts</h2>
+    <div class="card">
+      <h3>Sector exposure</h3>
+      ${secRows.map(([k,v])=>`<div style="margin:10px 0"><div class="row between small"><span>${esc(k)}</span><span>${(v/val*100).toFixed(0)}%</span></div><div class="bar"><i style="width:${(v/val*100).toFixed(1)}%"></i></div></div>`).join("")}
+      <div class="hr"></div>
+      <p class="small" style="margin:0">Largest position: <strong>${esc(largest.s.ticker)}</strong>, ${(largest.v/val*100).toFixed(0)}% of value.${largest.v/val>0.4?" That's a concentrated position.":""}</p>
+    </div>
+    ${recent.length?`<h2>Recent research</h2><div class="card"><ul class="tl">${recent.slice(0,5).map(r=>`<li><div class="tiny muted">${dfmt(r.d)} · ${esc(r.s.ticker)}</div><div class="small"><strong>${esc(r.t)}.</strong> ${esc((r.x||"").slice(0,160))}${(r.x||"").length>160?"…":""}</div></li>`).join("")}</ul></div>`:""}
+    <p class="footer-note">Research support, not investment advice.</p>
+    <a class="btn primary fab" href="#/add">+ Add stock</a>`;
+}
+
+function holdCard(s, ts){
+  const o = lastOf(s.outlooks), r = lastOf(s.reviews);
+  const p = s.price??null, chg = p!=null? (p-s.avg)/s.avg*100 : null;
+  const recent = r && r.findings && r.findings.length ? r.findings[0].headline : null;
+  return `<a class="card hold" href="#/stock/${s.id}">
+    <div class="row between" style="align-items:flex-start">
+      <div class="grow"><div class="tk">${esc(s.ticker)}</div><div class="small muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.name||"")}</div></div>
+      ${mark(ts.k)}
+    </div>
+    <div class="kv">
+      <div><div class="k">Price</div><div class="v">${money(p)}</div></div>
+      <div><div class="k">Avg price</div><div class="v">${money(s.avg)}</div></div>
+      <div><div class="k">Position</div><div class="v ${chg==null?"":chg>=0?"pos-t":"neg-t"}">${s.qty} · ${pct(chg)}</div></div>
+    </div>
+    <div class="hr" style="margin:12px 0 10px"></div>
+    <div class="small"><span class="muted">Outlook:</span> ${o?esc(o.stance)+" · "+esc(o.confidence)+" confidence":"not generated yet"}</div>
+    ${recent?`<div class="small"><span class="muted">Recent change:</span> ${esc(recent)}</div>`:""}
+    <div class="tiny muted" style="margin-top:4px">Last reviewed ${r?ago(r.date):"never"}</div>
+  </a>`;
+}
+
+function vStocks(app){
+  app.innerHTML = `<h1>My stocks</h1>
+    ${state.stocks.length? state.stocks.map(s=>holdCard(s,thesisStatus(s))).join("") : `<div class="empty"><p class="muted">No stocks yet.</p></div>`}
+    <a class="btn primary block" href="#/add" style="margin-top:8px">+ Add a stock</a>`;
+}
+
+function vAdd(app){
+  app.innerHTML = `<a class="back" href="#/stocks">‹ My stocks</a>
+  <h1>Add a stock</h1>
+  <p class="muted small">Your own words matter most here. Claude will organise them, never replace them.</p>
+  <form id="f" novalidate>
+    <div class="two">
+      <div><label class="f" for="tk">Ticker</label><input class="i" id="tk" required autocapitalize="characters" placeholder="e.g. INFY" maxlength="20"></div>
+      <div><label class="f" for="nm">Company name</label><input class="i" id="nm" placeholder="Optional"></div>
+    </div>
+    <div class="two">
+      <div><label class="f" for="qty">Quantity</label><input class="i" id="qty" type="number" inputmode="decimal" min="0" step="any" required></div>
+      <div><label class="f" for="avg">Average price</label><input class="i" id="avg" type="number" inputmode="decimal" min="0" step="any" required></div>
+    </div>
+    <div class="two">
+      <div><label class="f" for="pr">Current price</label><input class="i" id="pr" type="number" inputmode="decimal" min="0" step="any" placeholder="Optional"></div>
+      <div><label class="f" for="eps">Trailing EPS</label><input class="i" id="eps" type="number" inputmode="decimal" step="any" placeholder="Optional"></div>
+    </div>
+    <p class="hint">EPS (earnings per share, last 12 months) lets Claude show price scenarios. Without it, scenarios are skipped rather than guessed.</p>
+    <div class="two">
+      <div><label class="f" for="pd">Purchase date</label><input class="i" id="pd" type="date"></div>
+      <div><label class="f" for="hz">Horizon</label><select class="i" id="hz"><option>Under 1 year</option><option>1–3 years</option><option selected>3–5 years</option><option>5+ years</option></select></div>
+    </div>
+    <label class="f" for="why">Why are you investing?</label>
+    <textarea class="i serif-in" id="why" required placeholder="e.g. Revenue should keep growing above 15% as they win more cloud deals. Margins can expand as offshore mix rises. Almost no debt. Their new AI platform could open a second growth engine."></textarea>
+    <p class="hint">A few sentences is enough. Say what has to go right.</p>
+    <div id="msg"></div>
+    <button class="btn primary block" type="submit" id="go" style="margin-top:16px">Create my thesis</button>
+  </form>`;
+  const pf = window.__prefill; window.__prefill = null;
+  if(pf){ $("#tk").value = pf.ticker||""; $("#nm").value = pf.name||""; if(pf.price!=null) $("#pr").value = pf.price; if(pf.eps!=null) $("#eps").value = pf.eps; }
+  $("#f").onsubmit = async (e)=>{
+    e.preventDefault();
+    const g = id=>$("#"+id).value.trim();
+    const num = id=>{ const v=g(id); return v===""?null:Number(v); };
+    const tk = g("tk").toUpperCase(), why = g("why"), qty = num("qty"), avg = num("avg");
+    if(!tk || !why || qty==null || avg==null){ $("#msg").innerHTML = `<div class="err">Please fill in ticker, quantity, average price and why you're investing.</div>`; return; }
+    if(why.length<25){ $("#msg").innerHTML = `<div class="err">Add a little more detail on why you're investing, even two sentences helps.</div>`; return; }
+    const s = {id:uid(), ticker:tk, name:g("nm"), sector: pf&&pf.sector||"", exchange: pf&&pf.exchange||"", qty, avg, price:num("pr"), priceDate: num("pr")!=null?now():null, eps:num("eps"), purchaseDate:g("pd"), horizon:g("hz"), createdAt:now(),
+      theses:[{version:1, text:why, date:now(), note:"Original thesis"}], pillars:[], reviews:[], outlooks:[], news:[], chat:[]};
+    $("#go").disabled = true;
+    $("#msg").innerHTML = `<div class="progress"><span class="spin"></span>Reading your thesis and finding its pillars. This takes 10–40 seconds.</div>`;
+    try{
+      await extractPillars(s, why);
+      state.stocks.push(s); save();
+      location.hash = "#/stock/"+s.id;
+    }catch(err){
+      $("#go").disabled = false;
+      $("#msg").innerHTML = `<div class="err">${esc(errText(err))}</div>`;
+    }
+  };
+}
+
+async function extractPillars(s, text){
+  const prompt = `An investor wrote down why they own ${s.name||s.ticker} (${s.ticker}). Break their reasoning into its thesis pillars: the separate things that must stay true for the thesis to hold.
+Do not add ideas they did not express. Do not judge the thesis. Keep their meaning exactly.
+
+THEIR WORDS:
+"""${text}"""
+
+Reply with only JSON in this shape:
+{"company_name": "official company name if you recognise the ticker, else empty string",
+ "sector": "short sector name, e.g. IT services, Banking, Pharma; empty if unsure",
+ "exchange": "e.g. NSE, NYSE, NASDAQ; empty if unsure",
+ "pillars": [{"title": "3-7 word name", "quote": "the exact phrase from their words this pillar comes from, copied verbatim", "watch": ["2-3 specific, measurable things to monitor, e.g. 'Quarterly revenue growth vs 15%'"]}]}
+Between 2 and 6 pillars.`;
+  const out = await askJSON(prompt, "default", {max:2000});
+  const ps = Array.isArray(out && out.pillars) ? out.pillars : [];
+  if(!ps.length) throw {code:"invalid_json"};
+  s.pillars = ps.slice(0,6).map(p=>({id:"p"+uid().slice(0,5), title:String(p.title||"Pillar"), quote: text.includes(p.quote)?p.quote:String(p.quote||""), watch:(p.watch||[]).map(String).slice(0,4), status:"insufficient", reason:"Not reviewed yet. Press What changed? to check it against recent information.", updated:now()}));
+  if(!s.name && out.company_name) s.name = String(out.company_name);
+  if(out.sector) s.sector = String(out.sector);
+  if(out.exchange) s.exchange = String(out.exchange);
+}
+
+function vStock(app, id){
+  const s = stockById(id);
+  if(!s){ app.innerHTML = `<p>Stock not found.</p><a href="#/stocks">Back</a>`; return; }
+  const ts = thesisStatus(s), t = curThesis(s), r = lastOf(s.reviews), o = lastOf(s.outlooks);
+  const chg = s.price!=null? (s.price-s.avg)/s.avg*100 : null;
+  app.innerHTML = `<a class="back" href="#/stocks">‹ My stocks</a>
+  <div class="row between" style="align-items:flex-start">
+    <div class="grow"><h1 style="margin-bottom:0">${esc(s.ticker)}</h1><div class="muted small">${esc(s.name||"")}${s.sector?" · "+esc(s.sector):""}</div></div>
+    ${mark(ts.k)}
+  </div>
+  <div class="card tight" style="margin-top:14px">
+    <div class="kv">
+      <div><div class="k">Price</div><div class="v"><button class="btn ghost small" id="edp" style="padding:0;min-height:0;border:0;font-weight:500">${money(s.price)} ✎</button></div></div>
+      <div><div class="k">Avg · Qty</div><div class="v">${money(s.avg)} · ${s.qty}</div></div>
+      <div><div class="k">Return</div><div class="v ${chg==null?"":chg>=0?"pos-t":"neg-t"}">${pct(chg)}</div></div>
+    </div>
+    <div id="pedit"></div>
+    <p class="tiny muted" style="margin:6px 0 0">${s.priceDate?"Price updated "+ago(s.priceDate)+(s.priceSource?" ("+esc(s.priceSource)+")":""):"No current price yet"} · Horizon ${esc(s.horizon||"—")}</p>
+    ${cfg().web?`<button class="btn small block" id="lp" style="margin-top:10px">Get latest price and EPS</button><div id="lpmsg"></div>`:""}
+  </div>
+
+  <h2>Your thesis</h2>
+  <div class="card">
+    <p class="serif" style="margin:0">${esc(t.text)}</p>
+    <p class="tiny muted" style="margin:8px 0 0">Version ${t.version}, ${dfmt(t.date)}. ${s.theses.length>1?"Your original words are kept in the history below.":""}</p>
+    <div class="hr"></div>
+    <p class="small" style="margin:0"><strong>${ts.text || "No pillars"}.</strong></p>
+    ${s.pillars.map(p=>`<details class="pillar ${p.status}"><summary><div class="row between" style="align-items:flex-start"><strong class="grow">${esc(p.title)}</strong>${mark(p.status)}</div></summary>
+      ${p.quote?`<p class="quote">“${esc(p.quote)}”</p>`:""}
+      <p class="small" style="margin:6px 0">${esc(p.reason||STATUS[p.status].say)}</p>
+      ${p.watch&&p.watch.length?`<div class="small muted">Watch</div><ul class="watch">${p.watch.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>`:""}
+      <p class="tiny muted" style="margin:6px 0 0">Updated ${dfmt(p.updated)}</p>
+    </details>`).join("")}
+    <a class="btn small" href="#/stock/${s.id}/thesis" style="margin-top:8px">Revise thesis</a>
+  </div>
+
+  <button class="big-action" id="wc" style="margin-top:22px" ${busy["wc"+s.id]?"disabled":""}>
+    <span><span class="t">What changed?</span><div class="s">${r?"Since your last review "+ago(r.date):"Check your thesis against recent results and news"}</div></span>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+  <div id="wcpanel"></div>
+  ${r?reviewHTML(s,r):""}
+
+  <h2>AI outlook</h2>
+  <div id="olpanel"></div>
+  ${o?outlookHTML(s,o):`<div class="card"><p class="small muted">No outlook yet. It looks at fundamentals, the macro backdrop and recent developments to describe bull, base and bear cases. It does not predict the future.</p></div>`}
+  <button class="btn block" id="ol" ${busy["ol"+s.id]?"disabled":""}>${o?"Refresh outlook":"Generate outlook"}</button>
+
+  <h2>Check a news item</h2>
+  <div class="card">
+    <textarea class="i" id="nw" style="min-height:80px" placeholder="Paste a headline or short article"></textarea>
+    <button class="btn block" id="nwb" style="margin-top:8px">Classify</button>
+    <div id="nwout"></div>
+    ${s.news.slice().reverse().slice(0,6).map(newsHTML(s)).join("")}
+  </div>
+
+  <h2>Research copilot</h2>
+  <a class="card hold" href="#/chat/${s.id}"><div class="row between"><span><strong>Ask about ${esc(s.ticker)}</strong><br><span class="small muted">Questions answered in the context of your thesis</span></span><span>›</span></div></a>
+
+  <h2>Timeline</h2>
+  <div class="card">${timelineHTML(s)}</div>
+  <div class="card">
+    <label class="f" for="jn" style="margin-top:0">Add a journal note</label>
+    <textarea class="i" id="jn" style="min-height:80px" placeholder="What are you thinking about this holding today?"></textarea>
+    <button class="btn block" id="jnb" style="margin-top:8px">Save note</button>
+  </div>
+  <p class="footer-note">Research support, not investment advice.</p>`;
+
+  $("#edp").onclick = ()=>{
+    $("#pedit").innerHTML = `<div class="two" style="margin-top:10px"><input class="i" id="np" type="number" step="any" inputmode="decimal" placeholder="Price" value="${s.price??""}"><input class="i" id="ne" type="number" step="any" inputmode="decimal" placeholder="Trailing EPS" value="${s.eps??""}"></div><button class="btn primary block small" id="nps" style="margin-top:8px">Save</button>`;
+    $("#nps").onclick = ()=>{ const v=$("#np").value, e=$("#ne").value; s.price = v===""?null:Number(v); s.priceDate = now(); s.eps = e===""?null:Number(e); save(); rerender(); };
+  };
+  $("#wc").onclick = ()=>whatChangedForm(s);
+  const lp=$("#lp"); if(lp) lp.onclick = ()=>refreshPrice(s);
+  $("#ol").onclick = ()=>runOutlook(s);
+  $("#nwb").onclick = ()=>classifyNews(s);
+  $("#jnb").onclick = ()=>{ const v=$("#jn").value.trim(); if(!v) return; state.journal.push({id:uid(), stockId:s.id, date:now(), note:v, version:curThesis(s).version}); save(); rerender(); };
+}
+
+async function refreshPrice(s){
+  $("#lp").disabled = true;
+  $("#lpmsg").innerHTML = `<div class="progress"><span class="spin"></span>Looking up ${esc(s.ticker)}…</div>`;
+  const prompt = `Use web search to find the latest share price and trailing twelve-month EPS for ${s.name||s.ticker} (ticker ${s.ticker}${s.exchange?", "+s.exchange:""}). Quote the price in the stock's own trading currency.
+Reply with only JSON: {"price": number|null, "currency": "e.g. INR or USD", "price_date": "date of the price", "eps_ttm": number|null, "source": "site name"}. Use null for anything you cannot find reliably. Never guess.`;
+  try{
+    const out = await askJSON(prompt, "default", {web:true, webUses:3, max:1500});
+    if(out.price==null || isNaN(Number(out.price))) throw {code:"http", message:"couldn't find a reliable price"};
+    s.price = Number(out.price); s.priceDate = now(); s.priceSource = [out.source, out.price_date].filter(Boolean).join(", ");
+    if(out.eps_ttm!=null && !isNaN(Number(out.eps_ttm))) s.eps = Number(out.eps_ttm);
+    save(); rerender();
+  }catch(e){ const b=$("#lp"); if(b) b.disabled=false; const m=$("#lpmsg"); if(m) m.innerHTML = `<div class="err">${esc(errText(e))}</div>`; }
+}
+
+function reviewHTML(s, r){
+  return `<div class="card" style="margin-top:12px">
+    <div class="row between"><h3>Review of ${dfmt(r.date)}</h3></div>
+    <p class="small">${esc(r.summary)}</p>
+    ${(r.findings||[]).map(f=>{ const p = s.pillars.find(x=>x.id===f.pillar_id); return `<div class="pillar ${f.new_status}" style="margin:18px 0">
+      <div class="row between wrapflex" style="align-items:flex-start"><strong class="grow">${esc(f.headline)}</strong>${mark(f.new_status)}</div>
+      <div class="tiny muted">${p?"Pillar: "+esc(p.title):"General"} · Impact: ${esc(f.impact||"—")}${f.old_status&&f.old_status!==f.new_status?" · was "+esc(STATUS[f.old_status]?STATUS[f.old_status].label:f.old_status):""}</div>
+      <div class="split">
+        <div class="said"><div class="lab">What the company said</div><div class="small">${esc(f.company_statement||"No direct company statement.")}</div></div>
+        <div class="ai"><div class="lab">AI interpretation</div><div class="small">${esc(f.ai_interpretation)}</div></div>
+      </div>
+      <div class="small">${esc(f.status_reason||"")}</div>
+      ${f.evidence&&f.evidence.length?`<ul class="ev">${f.evidence.map(e=>`<li>${esc(e.source)}${e.date?", "+esc(e.date):""}${e.detail?": "+esc(e.detail):""}</li>`).join("")}</ul>`:""}
+      ${f.watch&&f.watch.length?`<div class="small muted" style="margin-top:8px">Watch next</div><ul class="watch">${f.watch.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>`:""}
+    </div>`;}).join("")}
+    ${r.major_event&&r.major_event.title?`<div class="hr"></div><h3>${esc(r.major_event.title)}</h3><p class="tiny muted">Two ways to read it</p>
+      <div class="bb"><div class="bull"><div class="tiny muted">Bull reading</div><div class="small">${esc(r.major_event.bull_reading)}</div></div><div class="bear"><div class="tiny muted">Bear reading</div><div class="small">${esc(r.major_event.bear_reading)}</div></div></div>
+      ${r.major_event.resolves?`<p class="small" style="margin-top:10px"><strong>What would settle it:</strong> ${esc(r.major_event.resolves)}</p>`:""}`:""}
+    ${r.data_note?`<div class="note">${esc(r.data_note)}</div>`:""}
+  </div>`;
+}
+
+function whatChangedForm(s){
+  const r = lastOf(s.reviews);
+  $("#wcpanel").innerHTML = `<div class="card" style="margin-top:12px">
+    <label class="f" for="wcin" style="margin-top:0">Paste anything new (optional)</label>
+    <textarea class="i" id="wcin" placeholder="Quarterly results, earnings call notes, management guidance, news articles…"></textarea>
+    <p class="hint">${cfg().web?"Claude will also search the web for the latest results, filings and news.":"Web search is off, so without pasted material Claude uses its background knowledge, which may be out of date."}</p>
+    <div class="row" style="margin-top:10px"><button class="btn ghost" id="wcx">Cancel</button><button class="btn primary grow" id="wcgo">Analyse${r?" since "+dfmt(r.date):""}</button></div>
+    <div id="wcmsg"></div></div>`;
+  $("#wcx").onclick = ()=>{ $("#wcpanel").innerHTML=""; };
+  $("#wcgo").onclick = ()=>runWhatChanged(s, $("#wcin").value.trim());
+  $("#wcin").focus();
+}
+
+async function runWhatChanged(s, pasted){
+  const key = "wc"+s.id; busy[key]=true;
+  $("#wcgo").disabled = true;
+  $("#wcmsg").innerHTML = `<div class="progress"><span class="spin"></span>Searching for recent results and news, then checking each pillar. This can take 1–2 minutes.</div>`;
+  const last = lastOf(s.reviews);
+  const prompt = `You are a careful equity research assistant. Review what has changed for this investor's thesis${last?" since their last review on "+last.date.slice(0,10):""}.
+${RULES}
+
+${stockContext(s)}
+${last?`\nPREVIOUS REVIEW SUMMARY: ${last.summary}`:""}
+
+MATERIAL THE USER PASTED (source "User-provided material", dated today unless it states a date):
+"""${pasted || "(nothing pasted)"}"""
+
+Look at results, filings, earnings calls, news, guidance and market developments. For each pillar that has relevant evidence, write one finding. If a pillar has no reliable evidence, include a finding with new_status "insufficient" and say what information is missing.
+
+Reply with only JSON:
+{"summary": "2-3 factual sentences on what changed",
+ "findings": [{"pillar_id": "one of the pillar ids above", "headline": "short factual headline", "company_statement": "what the company itself said or reported, or empty string", "ai_interpretation": "your interpretation of what it means for this pillar", "impact": "positive | negative | mixed | neutral", "new_status": "supported | monitor | challenged | insufficient", "status_reason": "one sentence explaining the status", "evidence": [{"source": "...", "date": "...", "detail": "the specific fact"}], "watch": ["1-3 measurable things to watch next"]}],
+ "major_event": {"title": "the single most important development, or empty string if none", "bull_reading": "how an optimist reads it", "bear_reading": "how a sceptic reads it", "resolves": "what future information would settle it"},
+ "data_note": "one sentence on data limits, e.g. that background knowledge may be out of date"}`;
+  try{
+    const out = await askJSON(prompt, "complex", {web:true, webUses:6, max:6000});
+    const findings = (out.findings||[]).filter(f=>f && typeof f==="object").map(f=>({...f, new_status: STATUS[f.new_status]?f.new_status:"insufficient"}));
+    const date = now();
+    findings.forEach(f=>{
+      const p = s.pillars.find(x=>x.id===f.pillar_id); if(!p) return;
+      f.old_status = p.status;
+      if(p.status!==f.new_status){
+        state.alerts.push({id:uid(), stockId:s.id, date, read:false, title:`${s.ticker}: ${p.title} is now ${STATUS[f.new_status].label.toLowerCase()}`, body:`Was ${STATUS[p.status].label.toLowerCase()}. ${f.status_reason||""}`, evidence:(f.evidence||[]).map(e=>e.source+(e.date?", "+e.date:"")).join("; ")});
+      }
+      p.status = f.new_status; p.reason = f.status_reason||p.reason; p.updated = date;
+      if(f.watch && f.watch.length) p.watch = f.watch.slice(0,4);
+    });
+    s.reviews.push({date, summary:String(out.summary||""), findings, major_event: out.major_event||null, data_note:String(out.data_note||""), pasted: !!pasted});
+    save();
+  }catch(e){
+    busy[key]=false;
+    const m = $("#wcmsg"); if(m){ m.innerHTML = `<div class="err">${esc(errText(e))}</div>`; const b=$("#wcgo"); if(b) b.disabled=false; }
+    return;
+  }
+  busy[key]=false; rerender();
+}
+
+function outlookHTML(s, o){
+  const prev = s.outlooks.length>1 ? s.outlooks[s.outlooks.length-2] : null;
+  const sc = o.scenarios;
+  let strip = "";
+  if(sc && sc.ok){
+    const vals = [sc.bear.low, sc.bull.high, s.price].filter(v=>v!=null);
+    const mn = Math.min(...vals)*0.92, mx = Math.max(...vals)*1.05, X = v=>((v-mn)/(mx-mn)*100).toFixed(2)+"%";
+    const band = (c,col)=>`<div class="rg" style="left:${X(c.low)};width:calc(${X(c.high)} - ${X(c.low)});background:${col}"></div>`;
+    strip = `<div class="strip" aria-hidden="true"><div class="ax"></div>${band(sc.bear,"var(--cha)")}${band(sc.base,"var(--petrol)")}${band(sc.bull,"var(--sup)")}${s.price!=null?`<div class="now" style="left:${X(s.price)}"><span class="nowl">Now ${money(s.price)}</span></div>`:""}</div>`;
+  }
+  const scCard = (n,k)=>{ const c=o[k], r = sc&&sc.ok?sc[k]:null; return `<div class="sc"><div class="row between"><strong>${n}</strong></div>
+    <p class="small" style="margin:6px 0">${esc(c&&c.narrative)}</p>
+    ${r?`<div class="small"><strong>${money(r.low)} – ${money(r.high)}</strong></div><div class="tiny muted">EPS growth ${c.eps_growth_pct}%/yr for ${sc.years} yr, P/E ${c.pe_low}–${c.pe_high}. ${esc(c.basis||"")}</div>`:""}</div>`; };
+  return `<div class="card">
+    <div class="row between wrapflex"><strong>${esc(o.stance)}</strong><span class="tag neu">${esc(o.confidence)} confidence</span></div>
+    <p class="small" style="margin:8px 0">${esc(o.summary)}</p>
+    <p class="tiny muted">Why ${esc(o.confidence.toLowerCase())} confidence: ${esc(o.confidence_reason)}</p>
+    ${o.change&&prev?`<div class="note"><strong>Changed from ${esc(prev.stance)} to ${esc(o.stance)}.</strong> ${esc(o.change)}</div>`:""}
+    <div class="hr"></div>
+    <h3>Scenarios</h3>
+    ${sc&&sc.ok?strip:`<div class="note">${esc(sc&&sc.msg||"Insufficient data to produce a reliable scenario.")}</div>`}
+    <div class="scen">${scCard("Bull","bull")}${scCard("Base","base")}${scCard("Bear","bear")}</div>
+    ${sc&&sc.ok?`<p class="tiny muted" style="margin-top:8px">Range = trailing EPS ${sc.eps} × (1 + growth)<sup>${sc.years}</sup> × P/E. These are arithmetic on stated assumptions, not predictions.</p>`:""}
+    ${o.drivers&&o.drivers.length?`<div class="hr"></div><div class="small muted">What it's based on</div><ul class="watch">${o.drivers.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}
+    ${o.monitor&&o.monitor.length?`<div class="small muted" style="margin-top:8px">What to monitor</div><ul class="watch">${o.monitor.map(d=>`<li>${esc(d)}</li>`).join("")}</ul>`:""}
+    <p class="tiny muted" style="margin:10px 0 0">Generated ${dfmt(o.date)}${o.web?" with web search":o.pasted?"":" from Claude's background knowledge, which may be out of date"}.</p>
+  </div>`;
+}
+
+async function runOutlook(s){
+  const key="ol"+s.id; busy[key]=true;
+  const btn=$("#ol"); btn.disabled=true;
+  $("#olpanel").innerHTML = `<div class="progress"><span class="spin"></span>Building bull, base and bear cases…</div>`;
+  const prev = lastOf(s.outlooks), r = lastOf(s.reviews);
+  const years = /5\+/.test(s.horizon)?5 : /3–5/.test(s.horizon)?3 : /1–3/.test(s.horizon)?2 : 1;
+  const prompt = `Produce a balanced outlook for this holding based on fundamentals, the macro backdrop and recent developments. Describe cases; do not predict.
+${RULES}
+
+${stockContext(s)}
+${r?`\nLATEST REVIEW (${r.date.slice(0,10)}): ${r.summary}\n${(r.findings||[]).map(f=>"- "+f.headline+": "+f.ai_interpretation).join("\n")}`:""}
+${prev?`\nPREVIOUS OUTLOOK (${prev.date.slice(0,10)}): stance ${prev.stance}, ${prev.confidence} confidence. ${prev.summary}`:""}
+
+For each scenario you may give valuation assumptions (annual EPS growth % over the next ${years} year(s) and a P/E range) ONLY if you can justify them from evidence; otherwise set them to null. Do not calculate prices; the app does that.
+
+Reply with only JSON:
+{"stance": "Improving | Stable | Weakening | Unclear",
+ "summary": "2-3 sentences",
+ "confidence": "Low | Medium | High",
+ "confidence_reason": "why that confidence level",
+ "bull": {"narrative": "...", "eps_growth_pct": number|null, "pe_low": number|null, "pe_high": number|null, "basis": "evidence behind these assumptions"},
+ "base": {same shape},
+ "bear": {same shape},
+ "drivers": ["2-4 facts the outlook is based on, each with source and date"],
+ "monitor": ["2-4 measurable things that would change this outlook"],
+ "change": ${prev?`"if the stance or confidence differs from the previous outlook, explain why and cite the evidence and affected pillars; else empty string"`:`""`}}`;
+  try{
+    const out = await askJSON(prompt, "complex", {web:true, webUses:4, max:5000});
+    const conf = ["Low","Medium","High"].includes(out.confidence)?out.confidence:"Low";
+    const o = {date:now(), stance:String(out.stance||"Unclear"), summary:String(out.summary||""), confidence:conf, confidence_reason:String(out.confidence_reason||""), bull:out.bull||{}, base:out.base||{}, bear:out.bear||{}, drivers:out.drivers||[], monitor:out.monitor||[], change:String(out.change||""), pasted: !!(r&&r.pasted), web: cfg().web};
+    o.scenarios = computeScenarios(s, o, years);
+    if(prev && prev.stance!==o.stance){
+      state.alerts.push({id:uid(), stockId:s.id, date:o.date, read:false, title:`${s.ticker}: outlook changed from ${prev.stance} to ${o.stance}`, body:o.change||o.summary});
+    } else if(prev && prev.scenarios && prev.scenarios.ok && o.scenarios.ok){
+      const m1=(prev.scenarios.base.low+prev.scenarios.base.high)/2, m2=(o.scenarios.base.low+o.scenarios.base.high)/2;
+      if(Math.abs(m2-m1)/m1>=0.10) state.alerts.push({id:uid(), stockId:s.id, date:o.date, read:false, title:`${s.ticker}: base scenario moved ${pct((m2-m1)/m1*100)}`, body:o.change||"The assumptions behind the base case changed."});
+    }
+    s.outlooks.push(o); save();
+  }catch(e){
+    busy[key]=false; const p=$("#olpanel"); if(p) p.innerHTML = `<div class="err">${esc(errText(e))}</div>`; const b=$("#ol"); if(b) b.disabled=false; return;
+  }
+  busy[key]=false; rerender();
+}
+
+function computeScenarios(s, o, years){
+  if(s.eps==null || !(s.eps>0)) return {ok:false, msg:"Insufficient data to produce a reliable scenario. Add the trailing EPS (tap the price above) to see price ranges."};
+  const res = {ok:true, eps:s.eps, years};
+  for(const k of ["bear","base","bull"]){
+    const c = o[k]||{};
+    const g=Number(c.eps_growth_pct), lo=Number(c.pe_low), hi=Number(c.pe_high);
+    if(c.eps_growth_pct==null||c.pe_low==null||c.pe_high==null||[g,lo,hi].some(isNaN)||lo<=0||hi<lo) return {ok:false, msg:"Insufficient data to produce a reliable scenario. Claude could not justify valuation assumptions from the available evidence."};
+    const fe = s.eps*Math.pow(1+g/100, years);
+    res[k] = {low: fe*lo, high: fe*hi};
+  }
+  return res;
+}
+
+function newsHTML(s){ return n=>{ const p = s.pillars.find(x=>x.id===n.pillar_id); const cls = {Positive:"pos",Negative:"neg",Neutral:"neu"}[n.cls]||""; return `<div style="margin-top:14px"><div class="row between" style="align-items:flex-start"><strong class="small grow">${esc(n.headline)}</strong><span class="tag ${cls}">${esc(n.cls)}</span></div><p class="small" style="margin:4px 0 0">${esc(n.why)}</p><p class="tiny muted" style="margin:2px 0 0">${p?"Affects: "+esc(p.title)+" · ":""}${dfmt(n.date)}</p></div>`; }; }
+
+async function classifyNews(s){
+  const txt = $("#nw").value.trim(); if(!txt) return;
+  $("#nwb").disabled = true;
+  $("#nwout").innerHTML = `<div class="progress"><span class="spin"></span>Reading…</div>`;
+  const prompt = `Classify this news for an investor holding ${s.ticker}, relative to their thesis.
+${RULES}
+
+${stockContext(s)}
+
+NEWS:
+"""${txt.slice(0,6000)}"""
+
+Reply with only JSON: {"headline": "short headline", "classification": "Positive | Neutral | Negative | Low relevance", "why": "one or two sentences: why this matters (or doesn't) for their thesis", "pillar_id": "affected pillar id or null"}`;
+  try{
+    const out = await askJSON(prompt, "quick", {max:800});
+    const cls = ["Positive","Neutral","Negative","Low relevance"].includes(out.classification)?out.classification:"Low relevance";
+    s.news.push({date:now(), headline:String(out.headline||txt.slice(0,80)), cls, why:String(out.why||""), pillar_id: out.pillar_id||null});
+    save(); rerender();
+  }catch(e){ $("#nwb").disabled=false; $("#nwout").innerHTML = `<div class="err">${esc(errText(e))}</div>`; }
+}
+
+function timelineHTML(s){
+  const ev = [];
+  s.theses.forEach(t=>ev.push({d:t.date, t: t.version===1?"Thesis created":"Thesis revised to version "+t.version, x: t.version===1?"":t.note}));
+  s.reviews.forEach(r=>ev.push({d:r.date, t:"What Changed review", x:r.summary}));
+  s.outlooks.forEach(o=>ev.push({d:o.date, t:"Outlook: "+o.stance+", "+o.confidence+" confidence", x:o.change}));
+  state.journal.filter(j=>j.stockId===s.id).forEach(j=>ev.push({d:j.date, t:"Journal note (thesis v"+j.version+")", x:j.note}));
+  state.alerts.filter(a=>a.stockId===s.id).forEach(a=>ev.push({d:a.date, t:"Alert", x:a.title}));
+  ev.sort((a,b)=>b.d.localeCompare(a.d));
+  return `<ul class="tl">${ev.map(e=>`<li><div class="tiny muted">${dfmt(e.d)}</div><div class="small"><strong>${esc(e.t)}</strong>${e.x?"<br>"+esc(e.x):""}</div></li>`).join("")}</ul>
+  ${s.theses.length>1?`<details style="margin-top:6px"><summary class="small" style="color:var(--petrol)">See every thesis version</summary>${s.theses.map(t=>`<div style="margin-top:12px"><div class="tiny muted">Version ${t.version} · ${dfmt(t.date)}${t.note?" · "+esc(t.note):""}</div><p class="serif" style="font-size:16px;margin:2px 0">${esc(t.text)}</p></div>`).join("")}</details>`:""}`;
+}
+
+function vRevise(app, id){
+  const s = stockById(id); if(!s){ location.hash="#/stocks"; return; }
+  const t = curThesis(s);
+  app.innerHTML = `<a class="back" href="#/stock/${s.id}">‹ ${esc(s.ticker)}</a>
+  <h1>Revise thesis</h1>
+  <p class="small muted">This creates version ${t.version+1}. Every earlier version, including your original, stays in the history.</p>
+  <label class="f" for="rt">Your thesis</label>
+  <textarea class="i serif-in" id="rt" style="min-height:180px">${esc(t.text)}</textarea>
+  <label class="f" for="rn">What changed in your thinking?</label>
+  <input class="i" id="rn" placeholder="e.g. Dropping the margin pillar after the Q2 call">
+  <div id="rmsg"></div>
+  <button class="btn primary block" id="rgo" style="margin-top:16px">Save version ${t.version+1}</button>`;
+  $("#rgo").onclick = async ()=>{
+    const text = $("#rt").value.trim(); if(text.length<25 || text===t.text){ $("#rmsg").innerHTML=`<div class="err">Change the thesis text first.</div>`; return; }
+    $("#rgo").disabled = true;
+    $("#rmsg").innerHTML = `<div class="progress"><span class="spin"></span>Updating pillars…</div>`;
+    const old = s.pillars.map(p=>({...p}));
+    try{
+      await extractPillars(s, text);
+      s.pillars.forEach(p=>{ const m = old.find(o=>o.title.toLowerCase()===p.title.toLowerCase()); if(m){ p.status=m.status; p.reason=m.reason; p.updated=m.updated; p.id=m.id; } });
+      s.theses.push({version:t.version+1, text, date:now(), note:$("#rn").value.trim()});
+      save(); location.hash = "#/stock/"+s.id;
+    }catch(e){ s.pillars = old; $("#rgo").disabled=false; $("#rmsg").innerHTML = `<div class="err">${esc(errText(e))}</div>`; }
+  };
+}
+
+function vResearch(app){
+  const recent = (state.searches||[]).slice().reverse();
+  app.innerHTML = `<h1>Search a stock</h1>
+  <p class="muted small">Live price, valuation, trend and news for any listed stock, found with web search.</p>
+  <div class="card">
+    <div class="searchbar"><input class="i grow" id="sq" placeholder="Name or ticker, e.g. Infosys or INFY" autocapitalize="characters" enterkeyhint="search"></div>
+    <div class="chips" id="mk">${["India (NSE/BSE)","US","Other"].map((m,i)=>`<button class="chip" data-m="${m}" style="${i===0?"background:var(--petrol);color:var(--petrol-ink);border-color:var(--petrol)":""}">${m}</button>`).join("")}</div>
+    <button class="btn primary block" id="sgo">Analyse</button>
+    <div id="smsg"></div>
+  </div>
+  ${recent.length?`<h2>Recent searches</h2>${recent.map(r=>`<a class="card tight hold" href="#/quote/${r.id}"><div class="row between"><span><strong>${esc(r.data.ticker||r.q)}</strong> <span class="small muted">${esc(r.data.name||"")}</span><br><span class="tiny muted">${ago(r.date)} · ${money2(r.data.price, r.data.currency)}</span></span><span class="lean ${leanOf(r).cls}" style="font-size:14px">${leanOf(r).label}</span></div></a>`).join("")}`:""}
+  ${state.stocks.length?`<h2>Ask about your holdings</h2>${state.stocks.map(s=>`<a class="card tight hold" href="#/chat/${s.id}"><div class="row between"><span><strong>${esc(s.ticker)}</strong> <span class="small muted">${esc(s.name||"")}</span></span><span>›</span></div></a>`).join("")}`:""}
+  ${scenarioTrack()}`;
+  let market = "India (NSE/BSE)";
+  app.querySelectorAll("#mk .chip").forEach(c=>c.onclick=()=>{ market=c.dataset.m; app.querySelectorAll("#mk .chip").forEach(x=>x.style.cssText=""); c.style.cssText="background:var(--petrol);color:var(--petrol-ink);border-color:var(--petrol)"; });
+  const go = ()=>runSearch($("#sq").value.trim(), market);
+  $("#sgo").onclick = go;
+  $("#sq").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+}
+
+function money2(n, cur){
+  if(n==null||isNaN(n)) return "—";
+  const sym = {INR:"₹",USD:"$",EUR:"€",GBP:"£",JPY:"¥"}[String(cur||"").toUpperCase()] || (cur? cur+" " : state.currency);
+  const loc = sym==="₹"?"en-IN":"en-US";
+  return sym + Number(n).toLocaleString(loc,{maximumFractionDigits: Math.abs(n)<100?2:0});
+}
+function num(v){ const n = Number(v); return v==null||v===""||isNaN(n) ? null : n; }
+
+async function runSearch(q, market){
+  if(!q){ $("#smsg").innerHTML = `<div class="err">Type a company name or ticker.</div>`; return; }
+  if(!cfg().web){ $("#smsg").innerHTML = `<div class="err">Stock search needs web search. Turn it on in Settings.</div>`; return; }
+  $("#sgo").disabled = true;
+  $("#smsg").innerHTML = `<div class="progress"><span class="spin"></span>Searching live market data and news for ${esc(q)}. This takes 30–90 seconds.</div>`;
+  const prompt = `Use web search to collect CURRENT market data for the listed stock "${q}" (market: ${market}). Today is ${new Date().toISOString().slice(0,10)}.
+Search reliable sources such as the exchange website, Screener, Moneycontrol, Economic Times, Yahoo Finance, Google Finance, Reuters or the company's own filings. Prefer the most recent figures and note the date for each source.
+Report facts only. Do not recommend buying or selling, and do not predict the price. Use null for anything you cannot find reliably; never guess or estimate a number.
+
+Reply with only JSON:
+{"name": "company name", "ticker": "ticker", "exchange": "e.g. NSE", "currency": "INR / USD / ...", "sector": "sector",
+ "price": number|null, "price_as_of": "date/time of the price", "day_change_pct": number|null,
+ "high_52w": number|null, "low_52w": number|null, "dma_50": number|null, "dma_200": number|null,
+ "market_cap": "as text with units, e.g. ₹6.2 lakh crore", "pe_ttm": number|null, "eps_ttm": number|null,
+ "pe_hist_low": number|null, "pe_hist_median": number|null, "pe_hist_high": number|null, "pe_hist_period": "e.g. last 5 years",
+ "pb": number|null, "dividend_yield_pct": number|null, "roe_pct": number|null, "debt_to_equity": number|null,
+ "revenue_growth_pct": number|null, "profit_growth_pct": number|null, "growth_period": "e.g. FY26 vs FY25 or latest quarter YoY",
+ "analyst": {"count": number|null, "consensus": "e.g. 18 Buy, 6 Hold, 2 Sell", "target_low": number|null, "target_avg": number|null, "target_high": number|null, "source": "...", "date": "..."} | null,
+ "news": [{"headline": "...", "date": "...", "source": "...", "tone": "positive | neutral | negative"}],
+ "bull_points": ["2-4 factual strengths, each with source and date"],
+ "bear_points": ["2-4 factual risks, each with source and date"],
+ "upcoming": ["known upcoming events with dates, e.g. results date, dividend record date"],
+ "summary": "2-3 neutral sentences on the company's current situation",
+ "sources": [{"name": "...", "date": "..."}]}
+Include up to 5 news items from the last 3 months.`;
+  try{
+    const data = await askJSON(prompt, "default", {web:true, webUses:8, max:6000});
+    if(!data || (!data.name && !data.ticker)) throw {code:"http", message:"couldn't identify that stock"};
+    const r = {id:uid(), q, market, date:now(), data};
+    state.searches = state.searches||[]; state.searches.push(r); save();
+    location.hash = "#/quote/"+r.id;
+  }catch(e){ const b=$("#sgo"); if(b) b.disabled=false; const m=$("#smsg"); if(m) m.innerHTML = `<div class="err">${esc(errText(e))}</div>`; }
+}
+
+/* Signals are computed here in code from the reported facts, so the logic is visible and consistent. */
+function analyse(d){
+  const p = num(d.price), eps = num(d.eps_ttm);
+  const out = {signals:[], zone:null};
+  // valuation zone
+  const lo = num(d.pe_hist_low), md = num(d.pe_hist_median), hi = num(d.pe_hist_high);
+  if(eps && eps>0 && lo && hi && hi>lo){
+    const mid = md && md>lo && md<hi ? md : (lo+hi)/2;
+    out.zone = {eps, lo, mid, hi, cheap:[eps*lo, eps*mid], fairTop: eps*hi};
+    if(p!=null){
+      const pe = p/eps;
+      let t, s;
+      if(pe<lo){ t=`Below its usual valuation (P/E ${pe.toFixed(1)} vs usual low ${lo})`; s=1; }
+      else if(pe<mid){ t=`In the lower half of its usual valuation (P/E ${pe.toFixed(1)})`; s=1; }
+      else if(pe<=hi){ t=`In the upper half of its usual valuation (P/E ${pe.toFixed(1)})`; s=0; }
+      else { t=`Above its usual valuation (P/E ${pe.toFixed(1)} vs usual high ${hi})`; s=-1; }
+      out.signals.push({k:"Valuation", t, s});
+    }
+  }
+  // trend
+  const d50 = num(d.dma_50), d200 = num(d.dma_200);
+  if(p!=null && d50 && d200){
+    if(p>d50 && p>d200) out.signals.push({k:"Trend", t:"Above both its 50- and 200-day averages (uptrend)", s:1});
+    else if(p<d50 && p<d200) out.signals.push({k:"Trend", t:"Below both its 50- and 200-day averages (downtrend)", s:-1});
+    else out.signals.push({k:"Trend", t:"Between its 50- and 200-day averages (mixed)", s:0});
+  }
+  // 52w position
+  const h52 = num(d.high_52w), l52 = num(d.low_52w);
+  if(p!=null && h52 && l52 && h52>l52){
+    const pos = (p-l52)/(h52-l52)*100;
+    out.pos52 = Math.max(0,Math.min(100,pos));
+    out.signals.push({k:"52-week range", t:`${pos.toFixed(0)}% of the way from the 52-week low to the high`, s:0});
+  }
+  // analysts
+  const a = d.analyst||{}; const tAvg = num(a.target_avg);
+  if(p!=null && tAvg){
+    const up = (tAvg-p)/p*100;
+    out.signals.push({k:"Analyst targets", t:`Average target ${money2(tAvg,d.currency)}, ${up>=0?up.toFixed(0)+"% above":Math.abs(up).toFixed(0)+"% below"} today's price${a.count?" ("+a.count+" analysts)":""}`, s: up>10?1: up<-5?-1:0});
+  }
+  // growth
+  const rg = num(d.revenue_growth_pct), pg = num(d.profit_growth_pct);
+  if(rg!=null || pg!=null){
+    const g = pg!=null?pg:rg;
+    out.signals.push({k:"Growth", t:[rg!=null?`Revenue ${pct(rg)}`:"", pg!=null?`profit ${pct(pg)}`:""].filter(Boolean).join(", ")+(d.growth_period?` (${d.growth_period})`:""), s: g>10?1: g<0?-1:0});
+  }
+  // news tone
+  const ns = (d.news||[]);
+  if(ns.length){
+    const sc = ns.reduce((x,n)=>x+(n.tone==="positive"?1:n.tone==="negative"?-1:0),0);
+    out.signals.push({k:"News tone", t:`${ns.filter(n=>n.tone==="positive").length} positive, ${ns.filter(n=>n.tone==="negative").length} negative of ${ns.length} recent stories`, s: sc>=2?1: sc<=-2?-1:0});
+  }
+  const scored = out.signals.filter(x=>x.k!=="52-week range");
+  const tot = scored.reduce((x,y)=>x+y.s,0);
+  out.lean = scored.length<3 ? {label:"Not enough data", cls:""} : tot>=2 ? {label:"Signals lean positive", cls:"pos"} : tot<=-2 ? {label:"Signals lean negative", cls:"neg"} : {label:"Signals are mixed", cls:"mix"};
+  out.count = {pos: scored.filter(x=>x.s>0).length, neg: scored.filter(x=>x.s<0).length, n: scored.length};
+  return out;
+}
+function leanOf(r){ const l = analyse(r.data).lean; return {label: l.label.replace("Signals ",""), cls:l.cls}; }
+
+function vQuote(app, id){
+  const r = (state.searches||[]).find(x=>x.id===id);
+  if(!r){ location.hash="#/research"; return; }
+  const d = r.data, A = analyse(d), cur = d.currency, M = v=>money2(v,cur);
+  const p = num(d.price);
+  const held = state.stocks.find(s=>s.ticker.toUpperCase()===String(d.ticker||"").toUpperCase());
+  const dc = num(d.day_change_pct);
+  const f = (k,v)=> v==null||v===""||v==="—" ? "" : `<div><span>${k}</span><span>${v}</span></div>`;
+  let zoneHTML = `<div class="note">Not enough data to work out a value zone (needs EPS and the stock's historical P/E range).</div>`;
+  if(A.zone){
+    const z = A.zone;
+    const lo = Math.min(z.cheap[0], p??z.cheap[0])*0.9, hi = Math.max(z.fairTop, p??0)*1.08;
+    const X = v=>((v-lo)/(hi-lo)*100).toFixed(1)+"%";
+    zoneHTML = `<p class="small" style="margin:0 0 4px">Price range where ${esc(d.ticker||d.name)} would trade in the <strong>lower half of its usual valuation</strong>:</p>
+    <div class="lean" style="color:var(--sup)">${M(z.cheap[0])} – ${M(z.cheap[1])}</div>
+    <div class="strip" aria-hidden="true" style="margin-top:22px"><div class="ax"></div>
+      <div class="rg" style="left:${X(z.cheap[0])};width:calc(${X(z.cheap[1])} - ${X(z.cheap[0])});background:var(--sup)"></div>
+      <div class="rg" style="left:${X(z.cheap[1])};width:calc(${X(z.fairTop)} - ${X(z.cheap[1])});background:var(--mon)"></div>
+      ${p!=null?`<div class="now" style="left:${X(p)}"><span class="nowl">Now ${M(p)}</span></div>`:""}
+    </div>
+    <div class="mlab"><span>Cheaper</span><span>Usual high ${M(z.fairTop)}</span></div>
+    <p class="tiny muted" style="margin-top:10px">How it's worked out: EPS ${z.eps} × P/E. Green = P/E ${z.lo} to ${z.mid.toFixed(1)} (low to middle of its ${esc(d.pe_hist_period||"historical")} range); amber = ${z.mid.toFixed(1)} to ${z.hi}. It shows where the stock would be cheap compared with its own history. It doesn't mean the price will get there, and a stock can stay cheap for a reason.</p>`;
+  }
+  app.innerHTML = `<a class="back" href="#/research">‹ Search</a>
+  <div class="row between" style="align-items:flex-start">
+    <div class="grow"><h1 style="margin-bottom:0">${esc(d.name||d.ticker)}</h1><div class="muted small">${esc([d.ticker,d.exchange,d.sector].filter(Boolean).join(" · "))}</div></div>
+  </div>
+  <div class="row" style="align-items:baseline;gap:10px;margin-top:10px"><span style="font-size:30px;font-weight:600">${M(p)}</span>${dc!=null?`<span class="${dc>=0?"pos-t":"neg-t"}" style="font-weight:500">${pct(dc)} today</span>`:""}</div>
+  <p class="tiny muted">${esc(d.price_as_of?"Price as of "+d.price_as_of:"")} · searched ${ago(r.date)}. Check your broker app for the live price before trading.</p>
+
+  <h2>Market signals</h2>
+  <div class="card">
+    <div class="lean ${A.lean.cls}">${A.lean.label}</div>
+    ${A.count.n?`<p class="tiny muted">${A.count.pos} positive, ${A.count.neg} negative, ${A.count.n-A.count.pos-A.count.neg} neutral. This describes today's signals, not where the price will go.</p>`:""}
+    ${A.signals.map(s=>`<div class="sig"><span class="muted">${s.k}</span><span style="text-align:right">${s.s>0?'<span class="pos-t">▲</span> ':s.s<0?'<span class="neg-t">▼</span> ':""}${esc(s.t)}</span></div>`).join("")}
+    ${A.pos52!=null?`<div class="meter" style="background:var(--rule)"><div class="pin" style="left:${A.pos52}%"></div></div><div class="mlab"><span>52w low ${M(num(d.low_52w))}</span><span>high ${M(num(d.high_52w))}</span></div>`:""}
+  </div>
+
+  <h2>Possible buying zone</h2>
+  <div class="card">${zoneHTML}</div>
+
+  ${d.analyst&&(d.analyst.target_avg||d.analyst.consensus)?`<h2>What analysts say</h2><div class="card">
+    ${d.analyst.consensus?`<p class="small" style="margin:0 0 8px"><strong>${esc(d.analyst.consensus)}</strong></p>`:""}
+    ${d.analyst.target_avg?`<div class="facts">${f("Low target",M(num(d.analyst.target_low)))}${f("Average",M(num(d.analyst.target_avg)))}${f("High target",M(num(d.analyst.target_high)))}</div>`:""}
+    <p class="tiny muted" style="margin:8px 0 0">${esc([d.analyst.source,d.analyst.date].filter(Boolean).join(", "))}. Analysts' targets are opinions and are often wrong.</p></div>`:""}
+
+  <h2>Key numbers</h2>
+  <div class="card"><div class="facts">
+    ${f("Market cap",esc(d.market_cap||""))}${f("P/E",num(d.pe_ttm)??"")}${f("EPS (TTM)",num(d.eps_ttm)??"")}
+    ${f("P/B",num(d.pb)??"")}${f("ROE",num(d.roe_pct)!=null?d.roe_pct+"%":"")}${f("Debt / equity",num(d.debt_to_equity)??"")}
+    ${f("Dividend yield",num(d.dividend_yield_pct)!=null?d.dividend_yield_pct+"%":"")}${f("50-day avg",d.dma_50?M(num(d.dma_50)):"")}${f("200-day avg",d.dma_200?M(num(d.dma_200)):"")}
+    ${f("Revenue growth",num(d.revenue_growth_pct)!=null?pct(num(d.revenue_growth_pct)):"")}${f("Profit growth",num(d.profit_growth_pct)!=null?pct(num(d.profit_growth_pct)):"")}
+  </div>${d.growth_period?`<p class="tiny muted" style="margin:8px 0 0">Growth: ${esc(d.growth_period)}</p>`:""}</div>
+
+  ${d.summary?`<h2>Current situation</h2><div class="card"><p class="small" style="margin:0">${esc(d.summary)}</p></div>`:""}
+
+  <h2>Bull vs bear</h2>
+  <div class="bb"><div class="bull"><div class="tiny muted">Strengths</div><ul class="watch">${(d.bull_points||[]).map(x=>`<li>${esc(x)}</li>`).join("")||"<li>None found</li>"}</ul></div>
+  <div class="bear"><div class="tiny muted">Risks</div><ul class="watch">${(d.bear_points||[]).map(x=>`<li>${esc(x)}</li>`).join("")||"<li>None found</li>"}</ul></div></div>
+
+  ${(d.news||[]).length?`<h2>Recent news</h2><div class="card">${d.news.map(n=>`<div style="margin:0 0 12px"><div class="row between" style="align-items:flex-start"><strong class="small grow">${esc(n.headline)}</strong><span class="tag ${n.tone==="positive"?"pos":n.tone==="negative"?"neg":"neu"}">${esc(n.tone||"neutral")}</span></div><div class="tiny muted">${esc([n.source,n.date].filter(Boolean).join(", "))}</div></div>`).join("")}</div>`:""}
+
+  ${(d.upcoming||[]).length?`<h2>Coming up</h2><div class="card"><ul class="watch" style="margin:0">${d.upcoming.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
+
+  <div style="margin-top:22px;display:grid;gap:10px">
+    ${held?`<a class="btn primary block" href="#/stock/${held.id}">Open ${esc(held.ticker)} in my stocks</a>`:`<button class="btn primary block" id="addq">Add to my stocks</button>`}
+    <button class="btn block" id="req">Refresh this search</button>
+  </div>
+  ${(d.sources||[]).length?`<p class="tiny muted" style="margin-top:18px">Sources: ${esc(d.sources.map(s=>[s.name,s.date].filter(Boolean).join(", ")).join("; "))}</p>`:""}
+  <p class="footer-note">Figures come from web search and can be delayed or wrong. Signals describe the present, not the future. Not investment advice.</p>`;
+  const aq=$("#addq"); if(aq) aq.onclick=()=>{ window.__prefill = {ticker:d.ticker, name:d.name, price:num(d.price), eps:num(d.eps_ttm), sector:d.sector, exchange:d.exchange}; location.hash="#/add"; };
+  $("#req").onclick=()=>{ location.hash="#/research"; setTimeout(()=>{ const i=$("#sq"); if(i){ i.value=r.q; runSearch(r.q, r.market); } },50); };
+}
+
+function scenarioTrack(){
+  const rows = [];
+  state.stocks.forEach(s=>s.outlooks.forEach(o=>{ if(o.scenarios&&o.scenarios.ok) rows.push({s,o}); }));
+  if(!rows.length) return "";
+  return `<h2>Scenario track record</h2><div class="card"><p class="small muted">Where today's price sits against each stored base case. Past fit doesn't mean future accuracy.</p>
+  ${rows.slice(-8).reverse().map(({s,o})=>{ const b=o.scenarios.base, p=s.price; let w="no current price"; if(p!=null){ w = p<o.scenarios.bear.low?"below the bear range": p<b.low?"below base, within bear side": p<=b.high?"inside the base range": p<=o.scenarios.bull.high?"above base, within bull side":"above the bull range"; } return `<div class="row between small" style="margin:10px 0"><span><strong>${esc(s.ticker)}</strong> <span class="muted">${dfmt(o.date)}</span></span><span>${w}</span></div>`; }).join("")}</div>`;
+}
+
+function vChat(app, id){
+  const s = stockById(id); if(!s){ location.hash="#/research"; return; }
+  const sugg = ["What are the biggest risks to my thesis?","What should I watch in the next results?","How does the competition look?","Explain the latest review in simple terms"];
+  app.innerHTML = `<a class="back" href="#/stock/${s.id}">‹ ${esc(s.ticker)}</a>
+  <h1>Ask about ${esc(s.ticker)}</h1>
+  <p class="tiny muted">Uses your thesis, your reviews and web search. Not investment advice.</p>
+  <div class="chat" id="log">${s.chat.map(m=>`<div class="msg ${m.role==="user"?"u":"a"}">${m.role==="user"?esc(m.content):md(m.content)}</div>`).join("")}</div>
+  ${s.chat.length?"":`<div class="chips">${sugg.map(q=>`<button class="chip">${esc(q)}</button>`).join("")}</div>`}
+  <div class="composer"><div class="row"><textarea class="i grow" id="q" rows="1" style="min-height:46px;height:46px" placeholder="Ask a question"></textarea><button class="btn primary" id="send">Send</button></div>
+  ${s.chat.length?`<button class="btn ghost small" id="clr" style="margin-top:6px">Clear conversation</button>`:""}</div>`;
+  document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ $("#q").value=c.textContent; send(); });
+  $("#send").onclick = send;
+  $("#q").addEventListener("keydown", e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); send(); } });
+  const clr=$("#clr"); if(clr) clr.onclick=()=>{ s.chat=[]; save(); rerender(); };
+  window.scrollTo(0, document.body.scrollHeight);
+  async function send(){
+    const q = $("#q").value.trim(); if(!q) return;
+    $("#q").value=""; $("#send").disabled = true;
+    const ch = $(".chips"); if(ch) ch.remove();
+    const log = $("#log");
+    log.insertAdjacentHTML("beforeend", `<div class="msg u">${esc(q)}</div><div class="msg a" id="live">Thinking…</div>`);
+    window.scrollTo(0, document.body.scrollHeight);
+    const r = lastOf(s.reviews), o = lastOf(s.outlooks);
+    const ctx = `You are a research copilot for an investor who holds ${s.ticker}. Answer their questions clearly and briefly, in plain English.
+${RULES}
+- Say where each fact comes from (their thesis, their latest review, or your background knowledge with its approximate date).
+
+${stockContext(s)}
+${r?`LATEST REVIEW (${r.date.slice(0,10)}): ${r.summary}`:""}
+${o?`LATEST OUTLOOK (${o.date.slice(0,10)}): ${o.stance}, ${o.confidence} confidence. ${o.summary}`:""}
+
+QUESTION: `;
+    const hist = s.chat.slice(-10).map(m=>({role:m.role, content:m.content}));
+    const turns = hist.length ? [{role:"user", content: ctx + hist[0].content}, ...hist.slice(1), {role:"user", content:q}] : [{role:"user", content: ctx + q}];
+    if(turns.length>1 && turns[1].role==="user"){ /* keep alternation valid */ }
+    const live = $("#live");
+    try{
+      const text = await callClaude(turns, {max:2000, web:true, webUses:3, onText:({text})=>{ live.innerHTML = md(text); window.scrollTo(0, document.body.scrollHeight); }});
+      live.innerHTML = md(text);
+      s.chat.push({role:"user", content:q},{role:"assistant", content:text});
+      save();
+    }catch(e){
+      live.innerHTML = `<span style="color:var(--cha)">${esc(errText(e))}</span>`;
+    }
+    live.removeAttribute("id");
+    $("#send").disabled = false;
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+}
+
+function vAlerts(app){
+  const list = state.alerts.slice().reverse();
+  app.innerHTML = `<h1>Alerts</h1>
+  <p class="small muted">Only material changes: a pillar's status moving, or the outlook changing. News alone never triggers an alert.</p>
+  ${list.length?list.map(a=>{ const s=stockById(a.stockId); return `<div class="card ${a.read?"":"unread"}"><div class="tiny muted">${dfmt(a.date)}</div><h3 style="margin-top:2px">${esc(a.title)}</h3><p class="small">${esc(a.body)}</p>${a.evidence?`<p class="tiny muted">Evidence: ${esc(a.evidence)}</p>`:""}<div class="row">${s?`<a class="btn small" href="#/stock/${s.id}">Open ${esc(s.ticker)}</a>`:""}${a.read?"":`<button class="btn ghost small" data-r="${a.id}">Mark as read</button>`}</div></div>`; }).join(""):`<div class="empty"><p class="muted">No alerts. You'll see one here when a review changes a pillar's status.</p></div>`}`;
+  app.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{ const a=state.alerts.find(x=>x.id===b.dataset.r); a.read=true; save(); rerender(); });
+}
+
+function vJournal(app){
+  const ent = state.journal.slice().reverse();
+  app.innerHTML = `<h1>Thesis journal</h1>
+  <p class="small muted">Your notes, each tied to the thesis version you held at the time. Nothing here is ever overwritten.</p>
+  ${state.stocks.length?`<div class="card"><label class="f" for="js" style="margin-top:0">Stock</label><select class="i" id="js">${state.stocks.map(s=>`<option value="${s.id}">${esc(s.ticker)}</option>`).join("")}</select>
+  <label class="f" for="jt">Note</label><textarea class="i" id="jt" style="min-height:90px" placeholder="What are you seeing or thinking?"></textarea>
+  <button class="btn primary block" id="jb" style="margin-top:10px">Save note</button></div>`:""}
+  ${ent.length?ent.map(j=>{ const s=stockById(j.stockId); return `<div class="card"><div class="tiny muted">${dfmt(j.date)} · ${s?esc(s.ticker):"Removed stock"} · thesis v${j.version}</div><p style="margin:6px 0 0;white-space:pre-wrap">${esc(j.note)}</p></div>`; }).join(""):`<div class="empty"><p class="muted">No journal entries yet.</p></div>`}`;
+  const jb=$("#jb"); if(jb) jb.onclick=()=>{ const v=$("#jt").value.trim(); if(!v) return; const s=stockById($("#js").value); state.journal.push({id:uid(), stockId:s.id, date:now(), note:v, version:curThesis(s).version}); save(); rerender(); };
+}
+
+function vSettings(app){
+  const c = cfg(), k = apiKey();
+  app.innerHTML = `<h1>Settings</h1>
+  <div class="card"><h3>Claude API key</h3>
+  <p class="small muted">Powers all analysis. Get one at console.anthropic.com → API keys. It's stored only on this phone and sent only to Anthropic.</p>
+  <input class="i" id="key" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(k)}">
+  <div class="row" style="margin-top:8px"><button class="btn primary grow" id="ksave">Save key</button><button class="btn" id="ktest">Test</button></div>
+  <div id="kmsg"></div>
+  <label class="f" for="mdl">Model</label>
+  <select class="i" id="mdl">${[["claude-sonnet-5","Claude Sonnet 5 (recommended)"],["claude-opus-5-5","Claude Opus 5.5 (deepest, costs more)"],["claude-haiku-4-5-20251001","Claude Haiku 4.5 (fastest, cheapest)"]].map(([v,l])=>`<option value="${v}" ${v===c.model?"selected":""}>${l}</option>`).join("")}</select>
+  <label class="row" style="margin-top:14px;gap:10px"><input type="checkbox" id="web" ${c.web?"checked":""} style="width:20px;height:20px"><span class="small"><strong>Use web search</strong><br><span class="muted">Finds the latest results, news and prices. Adds a small cost per search.</span></span></label>
+  </div>
+  <div class="card"><label class="f" for="cur" style="margin-top:0">Currency</label>
+  <select class="i" id="cur">${["₹","$","€","£"].map(x=>`<option ${x===state.currency?"selected":""}>${x}</option>`).join("")}</select></div>
+  <div class="card"><h3>Your data</h3><p class="small muted">Saved on this phone only. Make a backup now and then, and use it to move your data to another phone.</p>
+  <div class="row"><button class="btn grow" id="exp">Copy backup</button><button class="btn grow" id="imp">Restore backup</button></div>
+  <div id="bk"></div>
+  <div class="hr"></div>
+  ${state.stocks.map(s=>`<div class="row between small" style="margin:8px 0"><span>${esc(s.ticker)} ${esc(s.name||"")}</span><button class="btn ghost small" data-del="${s.id}">Remove</button></div>`).join("")}
+  <div class="hr"></div><button class="btn block" id="wipe" style="color:var(--cha)">Delete all data</button></div>
+  <div class="card"><h3>About</h3><p class="small muted">Thesis Monitor helps you track whether the reasons you invested still hold. It never tells you to buy or sell and isn't investment advice.</p></div>`;
+  $("#ksave").onclick = ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KEY_LS, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress">${v?"Saved.":"Key removed."}</div>`; };
+  $("#ktest").onclick = async ()=>{ const v=$("#key").value.trim(); try{ localStorage.setItem(KEY_LS, v); }catch(e){} $("#kmsg").innerHTML = `<div class="progress"><span class="spin"></span>Testing…</div>`;
+    try{ await callClaude([{role:"user",content:"Reply with the single word: ready"}], {tier:"quick", max:10}); $("#kmsg").innerHTML = `<div class="progress">It works. You're connected.</div>`; }catch(e){ $("#kmsg").innerHTML = `<div class="err">${esc(errText(e))}</div>`; } };
+  $("#mdl").onchange = e=>{ const x=cfg(); x.model=e.target.value; setCfg(x); };
+  $("#web").onchange = e=>{ const x=cfg(); x.web=e.target.checked; setCfg(x); };
+  $("#cur").onchange = e=>{ state.currency=e.target.value; save(); };
+  $("#exp").onclick = async ()=>{ const t = JSON.stringify(state); let ok=false; try{ await navigator.clipboard.writeText(t); ok=true; }catch(e){}
+    $("#bk").innerHTML = ok? `<div class="progress">Backup copied. Paste it somewhere safe, like a note or an email to yourself.</div>` : `<p class="small muted" style="margin-top:8px">Copy all of this text and keep it somewhere safe:</p><textarea class="i" readonly style="min-height:120px">${esc(t)}</textarea>`; };
+  $("#imp").onclick = ()=>{ $("#bk").innerHTML = `<textarea class="i" id="bkin" style="min-height:120px;margin-top:8px" placeholder="Paste your backup here"></textarea><button class="btn primary block" id="bkgo" style="margin-top:8px">Restore</button>`;
+    $("#bkgo").onclick = ()=>{ try{ const d = JSON.parse($("#bkin").value); if(!Array.isArray(d.stocks)) throw 0; if(!confirm("Replace everything on this phone with the backup?")) return; state = Object.assign(blank(), d); save(); location.hash="#/home"; }catch(e){ alert("That doesn't look like a Thesis Monitor backup."); } }; };
+  app.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ const s=stockById(b.dataset.del); if(!confirm("Remove "+s.ticker+" and its history?")) return; state.stocks=state.stocks.filter(x=>x.id!==s.id); state.alerts=state.alerts.filter(a=>a.stockId!==s.id); state.journal=state.journal.filter(j=>j.stockId!==s.id); save(); rerender(); });
+  $("#wipe").onclick = ()=>{ if(!confirm("Delete every stock, review, alert and note?")) return; state = blank(); save(); location.hash="#/home"; };
+}
+
+/* ---------- demo (fictional company) ---------- */
+function loadDemo(){
+  const d = n=>new Date(Date.now()-n*86400000).toISOString();
+  const s = {id:uid(), ticker:"NWIT", name:"Northwind Infotech (example, fictional)", sector:"IT services", exchange:"Example", qty:40, avg:3100, price:3421, priceDate:d(1), eps:118, purchaseDate:"2025-03-14", horizon:"3–5 years", createdAt:d(190),
+    theses:[{version:1, date:d(190), note:"Original thesis", text:"Revenue should keep growing above 15% a year as Northwind wins more cloud migration deals. Margins can expand as more work moves offshore. The balance sheet is clean with almost no debt. Their new Atlas AI platform could become a second growth engine."}],
+    pillars:[
+      {id:"p1", title:"Revenue growth above 15%", quote:"Revenue should keep growing above 15% a year", watch:["Quarterly revenue growth vs 15%","Large deal wins (> $50m)","Client concentration in top 5"], status:"challenged", reason:"Revenue grew 9% last quarter and full-year guidance was cut to 10–12%.", updated:d(34)},
+      {id:"p2", title:"Margin expansion from offshore mix", quote:"Margins can expand as more work moves offshore", watch:["Operating margin trend","Offshore revenue share"], status:"monitor", reason:"Offshore mix rose, but margin was flat because of wage hikes.", updated:d(34)},
+      {id:"p3", title:"Clean balance sheet", quote:"The balance sheet is clean with almost no debt", watch:["Net cash position","Acquisition spending"], status:"supported", reason:"Net cash position unchanged; no new borrowing.", updated:d(34)},
+      {id:"p4", title:"Atlas AI as second engine", quote:"Their new Atlas AI platform could become a second growth engine", watch:["Atlas client count","Atlas revenue disclosure"], status:"monitor", reason:"Management cited 30 pilot clients but hasn't disclosed revenue.", updated:d(34)}
+    ],
+    reviews:[{date:d(34), pasted:true, summary:"Q1 revenue growth slowed to 9% and management cut full-year guidance. Margins held flat. Atlas has 30 pilot clients but no revenue disclosed.",
+      findings:[
+        {pillar_id:"p1", headline:"Revenue growth slowed to 9%; guidance cut", company_statement:"Q1 revenue grew 9% year on year. Full-year guidance revised to 10–12% from 14–16%.", ai_interpretation:"Growth is now well below the 15% your thesis relies on, and the guidance cut suggests it isn't a one-quarter blip.", impact:"negative", old_status:"monitor", new_status:"challenged", status_reason:"Two consecutive quarters below 15% plus lowered guidance.", evidence:[{source:"Q1 results press release (example)", date:"Aug 2026", detail:"Revenue +9% YoY"},{source:"Q1 earnings call (example)", date:"Aug 2026", detail:"Guidance cut to 10–12%"}], watch:["Q2 revenue growth","Deal pipeline commentary"]},
+        {pillar_id:"p2", headline:"Offshore mix up, margin flat", company_statement:"Offshore share rose to 71%. Operating margin 20.1%, flat.", ai_interpretation:"The mechanism in your thesis is working, but wage increases absorbed the benefit this quarter.", impact:"mixed", old_status:"supported", new_status:"monitor", status_reason:"Driver improving, outcome not yet visible.", evidence:[{source:"Q1 results press release (example)", date:"Aug 2026", detail:"Operating margin 20.1%"}], watch:["Operating margin after wage cycle"]}
+      ],
+      major_event:{title:"Guidance cut", bull_reading:"A cautious reset after a slow quarter for the whole sector; the deal pipeline is still described as strong.", bear_reading:"Client spending on cloud migration may have peaked, which would undercut the main growth pillar.", resolves:"Q2 deal wins and whether guidance holds or is cut again."},
+      data_note:"Example data for a fictional company."}],
+    outlooks:[
+      {date:d(80), stance:"Stable", summary:"Solid execution with growth near the thesis threshold.", confidence:"Medium", confidence_reason:"Consistent results, but limited visibility on deal flow.", bull:{narrative:"Cloud deals re-accelerate."}, base:{narrative:"Growth near 14%."}, bear:{narrative:"Spending slowdown."}, drivers:[], monitor:[], change:"", pasted:true, scenarios:{ok:true, eps:112, years:3, bear:{low:2400,high:3000}, base:{low:3300,high:4100}, bull:{low:4300,high:5200}}},
+      {date:d(33), stance:"Weakening", summary:"Growth has slowed below the thesis threshold and guidance was lowered. The balance sheet remains a strength.", confidence:"Medium", confidence_reason:"The slowdown is clear in reported numbers; how long it lasts is not.", pasted:true,
+        bull:{narrative:"Pipeline converts in H2, growth returns to mid-teens and Atlas starts contributing.", eps_growth_pct:14, pe_low:28, pe_high:32, basis:"Pre-slowdown growth rate; historical P/E range (example)."},
+        base:{narrative:"Growth settles around 10–11% with flat margins.", eps_growth_pct:10, pe_low:24, pe_high:27, basis:"Revised guidance midpoint (example)."},
+        bear:{narrative:"Another guidance cut; the market re-rates the stock lower.", eps_growth_pct:5, pe_low:19, pe_high:22, basis:"Downside if spending slowdown persists (example)."},
+        drivers:["Q1 revenue +9% YoY (results, Aug 2026, example)","Guidance cut to 10–12% (earnings call, Aug 2026, example)","Net cash unchanged (balance sheet, Aug 2026, example)"],
+        monitor:["Q2 revenue growth vs 10%","Large deal announcements","Atlas revenue disclosure"],
+        change:"Moved from Stable to Weakening because of the guidance cut, which affects the revenue-growth pillar."}
+    ],
+    news:[{date:d(20), headline:"Northwind signs 5-year cloud deal with a European retailer", cls:"Positive", why:"Directly relevant to the revenue-growth pillar, though one deal won't offset the guidance cut.", pillar_id:"p1"}],
+    chat:[]};
+  s.outlooks[1].scenarios = computeScenarios(s, s.outlooks[1], 3);
+  state.stocks.push(s);
+  state.alerts.push({id:uid(), stockId:s.id, date:d(34), read:false, title:"NWIT: Revenue growth above 15% is now potentially challenged", body:"Was needs monitoring. Two consecutive quarters below 15% plus lowered guidance.", evidence:"Q1 results press release (example), Aug 2026"});
+  state.alerts.push({id:uid(), stockId:s.id, date:d(33), read:false, title:"NWIT: outlook changed from Stable to Weakening", body:"The guidance cut affects the revenue-growth pillar."});
+  state.journal.push({id:uid(), stockId:s.id, date:d(30), version:1, note:"Holding for now. If Q2 growth is below 10% again, I'll rethink the revenue pillar."});
+  save();
+}
+
+/* ---------- boot ---------- */
+const cached = lsGet(); if(cached && cached.stocks) state = Object.assign(blank(), cached);
+if(!Array.isArray(state.searches)) state.searches = [];
+route();
+if(navigator.serviceWorker && location.protocol==="https:" && !/localhost/.test(location.hostname)){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+})();
+</script>
+</body>
+</html>
